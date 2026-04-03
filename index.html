@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beam AI — Quick Review Workflow · PM Case Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:  '#0F172A',
+            beam:  '#2563EB',
+            risk:  '#EF4444',
+            amber: '#F59E0B',
+            go:    '#22C55E',
+          },
+          fontFamily: { inter: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    *, body { font-family: 'Inter', system-ui, sans-serif; }
+    html { scroll-behavior: smooth; }
+
+    /* ── Confidence bar ── */
+    .conf-bar { height: 4px; border-radius: 2px; background: #E5E7EB; overflow: hidden; }
+    .conf-fill-red    { height: 4px; background: #EF4444; border-radius: 2px; }
+    .conf-fill-amber  { height: 4px; background: #F59E0B; border-radius: 2px; }
+    .conf-fill-green  { height: 4px; background: #22C55E; border-radius: 2px; }
+
+    /* ── Wireframe aesthetic ── */
+    .wf-outer { background: #F3F4F6; border: 1.5px solid #D1D5DB; border-radius: 12px; }
+    .wf-box   { background: #E5E7EB; border: 1px solid #D1D5DB; border-radius: 6px; }
+    .wf-label { color: #6B7280; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; }
+    .wf-text  { color: #374151; }
+
+    /* ── Annotation callout ── */
+    .annot {
+      background: #FAFAFA;
+      border: 1.5px dashed #9CA3AF;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-style: italic;
+      color: #6B7280;
+      line-height: 1.5;
+      position: relative;
+    }
+    .annot::before {
+      content: '←';
+      position: absolute;
+      left: -22px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9CA3AF;
+      font-style: normal;
+      font-size: 14px;
+    }
+
+    /* ── Journey arrow ── */
+    .journey-arrow { color: #94A3B8; font-size: 20px; line-height: 1; }
+
+    /* ── Layer pipeline arrow ── */
+    .pipe-arrow { color: #2563EB; font-weight: 700; font-size: 22px; line-height: 1; flex-shrink: 0; }
+
+    /* ── kbd chip ── */
+    kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 24px; height: 22px; padding: 0 6px;
+      background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 4px;
+      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+      color: #374151; letter-spacing: 0.03em;
+    }
+
+    /* ── Action button variants ── */
+    .btn-accept  { background: #DCFCE7; border: 1px solid #86EFAC; color: #166534; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+    .btn-correct { background: #EFF6FF; border: 1px solid #93C5FD; color: #1D4ED8; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+    .btn-flag    { background: #FFF7ED; border: 1px solid #FCD34D; color: #92400E; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+    .btn-skip    { background: #F9FAFB; border: 1px solid #D1D5DB; color: #6B7280; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+
+    /* ── Progress ring ── */
+    .progress-bar-outer { background: #E5E7EB; border-radius: 4px; height: 6px; width: 100%; }
+    .progress-bar-inner { background: #2563EB; border-radius: 4px; height: 6px; }
+
+    /* ── Risk border colors ── */
+    .risk-high   { border-left: 4px solid #EF4444 !important; }
+    .risk-medium { border-left: 4px solid #F59E0B !important; }
+    .risk-low    { border-left: 4px solid #9CA3AF !important; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+
+    /* section label */
+    .section-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+      background: #EFF6FF; color: #2563EB; margin-bottom: 12px;
+    }
+  </style>
+</head>
+
+<body class="bg-[#F9FAFB] text-[#0F172A]">
+
+<!-- ════════════════════════════════════════
+     STICKY NAV
+════════════════════════════════════════ -->
+<nav class="sticky top-0 z-50 bg-[#0F172A] border-b border-white/10 shadow-sm">
+  <div class="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <!-- Beam AI wordmark -->
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg bg-[#2563EB] flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L7 2L12 7L7 12L2 7Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="text-white font-bold text-sm tracking-tight">Beam AI</span>
+      </div>
+      <span class="text-white/30 text-sm">·</span>
+      <span class="text-white/70 text-sm font-medium">Quick Review Workflow</span>
+      <span class="hidden sm:inline text-white/30 text-sm">·</span>
+      <span class="hidden sm:inline text-white/50 text-xs">PM Case Study</span>
+    </div>
+    <a href="https://linkedin.com/in/namangautam08" target="_blank"
+       class="flex items-center gap-2 text-white/60 hover:text-white text-xs font-medium transition-colors">
+      <span class="hidden sm:inline">By</span>
+      <span class="text-white/90 font-semibold">Naman Gautam</span>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="text-white/40">
+        <path d="M2 10L10 2M10 2H4M10 2V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 1: FRAME THE PROBLEM
+════════════════════════════════════════ -->
+<section id="problem" class="py-16 sm:py-20 border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-5">
+
+    <div class="section-tag">Section 1 — Frame the Problem</div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-2 leading-tight">
+      The review step that costs $40,000
+    </h1>
+    <p class="text-[#6B7280] text-base max-w-2xl mb-12 leading-relaxed">
+      Beam AI automates HVAC takeoffs. But automation without review confidence isn't automation — it's just faster risk. Here's the problem through the estimator's eyes.
+    </p>
+
+    <!-- Persona card -->
+    <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 mb-10 max-w-xl shadow-sm">
+      <div class="flex items-center gap-4 mb-5">
+        <div class="w-12 h-12 rounded-full bg-[#EFF6FF] border-2 border-[#BFDBFE] flex items-center justify-center">
+          <span class="text-[#2563EB] font-bold text-lg">M</span>
+        </div>
+        <div>
+          <div class="font-bold text-[#0F172A] text-base">Marcus Chen</div>
+          <div class="text-[#6B7280] text-sm">Senior Estimator · 12 years HVAC</div>
+          <div class="text-[#6B7280] text-xs mt-0.5">Commercial projects $500K–$5M</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3 pt-4 border-t border-[#F3F4F6]">
+        <div class="text-center">
+          <div class="text-[#2563EB] font-bold text-lg">400–600</div>
+          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">annotations<br/>per drawing</div>
+        </div>
+        <div class="text-center border-x border-[#F3F4F6]">
+          <div class="text-[#EF4444] font-bold text-lg">90 min</div>
+          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">current review<br/>time avg.</div>
+        </div>
+        <div class="text-center">
+          <div class="text-[#EF4444] font-bold text-lg">$40K+</div>
+          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">cost of missed<br/>AHU miscount</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JTBD blocks -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-4xl">
+      <div class="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5">
+        <div class="text-[#1D4ED8] text-xs font-bold uppercase tracking-widest mb-3">Job to be Done — Efficiency</div>
+        <p class="text-[#1E3A8A] text-sm leading-relaxed">
+          "When reviewing AI takeoffs on large drawings, I need to know which items are most likely wrong so I can verify those first and skip the ones the AI probably got right."
+        </p>
+      </div>
+      <div class="bg-[#F0FDF4] border border-[#86EFAC] rounded-xl p-5">
+        <div class="text-[#166534] text-xs font-bold uppercase tracking-widest mb-3">Job to be Done — Confidence</div>
+        <p class="text-[#14532D] text-sm leading-relaxed">
+          "When I'm done reviewing, I need to feel confident enough to export — not wonder if I missed something that could blow the bid."
+        </p>
+      </div>
+    </div>
+
+    <!-- Current journey -->
+    <div>
+      <div class="text-[#6B7280] text-xs font-bold uppercase tracking-widest mb-5">Current Journey — Without Quick Review</div>
+      <div class="flex flex-col md:flex-row items-start gap-1 md:gap-0">
+
+        <!-- Step 1 -->
+        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
+          <div class="flex flex-col md:items-center md:w-full">
+            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
+              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">01</div>
+              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Receive AI<br class="hidden md:block"/> takeoff output</div>
+            </div>
+            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
+              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
+                <span class="text-[#EF4444] text-xs">⚠</span>
+                <span class="text-[#EF4444] text-xs leading-tight">"No signal on which items are uncertain"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
+        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
+
+        <!-- Step 2 -->
+        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
+          <div class="flex flex-col md:items-center md:w-full">
+            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
+              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">02</div>
+              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Open drawing +<br class="hidden md:block"/> spreadsheet</div>
+            </div>
+            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
+              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
+                <span class="text-[#EF4444] text-xs">⚠</span>
+                <span class="text-[#EF4444] text-xs leading-tight">"Context switching breaks focus"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
+        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
+
+        <!-- Step 3 -->
+        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
+          <div class="flex flex-col md:items-center md:w-full">
+            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
+              <div class="w-8 h-8 rounded-full bg-[#EF4444] text-white text-xs font-bold flex items-center justify-center shrink-0">03</div>
+              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Scroll 400+<br class="hidden md:block"/> annotations</div>
+            </div>
+            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
+              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
+                <span class="text-[#EF4444] text-xs">⚠</span>
+                <span class="text-[#EF4444] text-xs leading-tight">"Everything looks equally urgent"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
+        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
+
+        <!-- Step 4 -->
+        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
+          <div class="flex flex-col md:items-center md:w-full">
+            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
+              <div class="w-8 h-8 rounded-full bg-[#EF4444] text-white text-xs font-bold flex items-center justify-center shrink-0">04</div>
+              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Manual cross-check<br class="hidden md:block"/> suspicious items</div>
+            </div>
+            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
+              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
+                <span class="text-[#EF4444] text-xs">⚠</span>
+                <span class="text-[#EF4444] text-xs leading-tight">"No way to track what's been checked"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
+        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
+
+        <!-- Step 5 -->
+        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
+          <div class="flex flex-col md:items-center md:w-full">
+            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
+              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">05</div>
+              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Export BoQ</div>
+            </div>
+            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
+              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
+                <span class="text-[#EF4444] text-xs">⚠</span>
+                <span class="text-[#EF4444] text-xs leading-tight">"Never sure if it's actually complete"</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end journey -->
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 2: SUCCESS METRICS
+════════════════════════════════════════ -->
+<section id="metrics" class="py-16 sm:py-20 bg-white border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-5">
+
+    <div class="section-tag">Section 2 — Success Metrics</div>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">How we know it's working</h2>
+    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Three metrics. Each tied to a behavior we want to change, an instrumentation method, and a target we'd validate in beta before committing to at scale.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+      <!-- Metric 1 -->
+      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2563EB" stroke-width="1.5"/><path d="M8 5v3.5l2 2" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <span class="text-[#0F172A] font-bold text-sm">Review Completion Time</span>
+        </div>
+        <div class="mb-4">
+          <div class="text-3xl font-extrabold text-[#2563EB] mb-1">&lt;25 min</div>
+          <div class="text-[#6B7280] text-xs">per 40-sheet drawing</div>
+          <div class="mt-1.5 flex items-center gap-2">
+            <div class="text-[#9CA3AF] text-xs line-through">90 min today</div>
+            <div class="text-[#22C55E] text-xs font-semibold">73% reduction</div>
+          </div>
+        </div>
+        <div class="space-y-3 flex-1">
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed">Faster review = more bids per estimator per week. At 3 extra reviews/week per estimator, that's direct revenue multiplier for the Beam customer.</div>
+          </div>
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Timestamp: "Start Review" → "Export" click, per drawing session. Track p50 and p90 separately.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric 2 -->
+      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-[#F0FDF4] flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 5" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="text-[#0F172A] font-bold text-sm">AI Acceptance Rate</span>
+        </div>
+        <div class="mb-4">
+          <div class="text-3xl font-extrabold text-[#22C55E] mb-1">&gt;82%</div>
+          <div class="text-[#6B7280] text-xs">of annotations accepted without correction</div>
+          <div class="mt-1.5 text-[#F59E0B] text-xs font-medium">Proxy for review quality</div>
+        </div>
+        <div class="space-y-3 flex-1">
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed">If estimators correct &gt;18%, either AI quality is low or the UX is causing over-correction. This metric surfaces which — it's a diagnostic as much as a target.</div>
+          </div>
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Log every annotation action: Accept / Correct / Flag — with annotation type and AI confidence score. Report per session.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric 3 -->
+      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-[#FFF7ED] flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="#F59E0B" stroke-width="1.5"/><path d="M5 7h6M5 10h4" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <span class="text-[#0F172A] font-bold text-sm">Post-Export Error Rate</span>
+        </div>
+        <div class="mb-4">
+          <div class="text-3xl font-extrabold text-[#F59E0B] mb-1">&lt;1.5%</div>
+          <div class="text-[#6B7280] text-xs">quantity discrepancy vs. field count</div>
+          <div class="mt-1.5 text-[#2563EB] text-xs font-medium">The ultimate test</div>
+        </div>
+        <div class="space-y-3 flex-1">
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed">The final measure — did the review actually catch what mattered? Fast review means nothing if the BoQ is still wrong on site.</div>
+          </div>
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
+            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Compare exported BoQ quantities to field verification reports. Sampled monthly. Requires Beam customer ops team coordination.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 3: SOLUTION CONCEPT
+════════════════════════════════════════ -->
+<section id="solution" class="py-16 sm:py-20 border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-5">
+
+    <div class="section-tag">Section 3 — Solution Concept</div>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">A three-layer review system</h2>
+    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">The insight: not all 400 annotations deserve equal attention. The solution isn't a faster way to check everything — it's a smarter way to know what to skip.</p>
+
+    <!-- Pipeline diagram -->
+    <div class="flex flex-col md:flex-row items-stretch gap-3 md:gap-0 mb-10">
+
+      <!-- Layer 1 -->
+      <div class="flex-1 bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl md:rounded-r-none md:border-r-0 p-6">
+        <div class="text-[#1D4ED8] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 1</div>
+        <div class="text-[#1E3A8A] font-bold text-base mb-3">Confidence Engine</div>
+        <div class="text-[#3B82F6] text-xs leading-relaxed mb-4">
+          AI scores every annotation 0–100 on detection confidence.
+        </div>
+        <div class="space-y-1.5">
+          <div class="text-[#1D4ED8] text-xs font-medium">Inputs:</div>
+          <div class="flex flex-wrap gap-1.5">
+            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Symbol clarity</span>
+            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Overlap detection</span>
+            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Drawing scale</span>
+            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Historical accuracy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow 1→2 -->
+      <div class="pipe-arrow flex items-center justify-center px-2 py-3 md:py-0 md:mt-0">
+        <span class="hidden md:block">→</span>
+        <span class="md:hidden">↓</span>
+      </div>
+
+      <!-- Layer 2 -->
+      <div class="flex-1 bg-white border border-[#E5E7EB] rounded-2xl md:rounded-none md:border-x-0 p-6 shadow-sm">
+        <div class="text-[#6B7280] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 2</div>
+        <div class="text-[#0F172A] font-bold text-base mb-3">Risk Prioritizer</div>
+        <div class="text-[#6B7280] text-xs leading-relaxed mb-4">
+          Combines confidence + dollar value + annotation rarity. Outputs a ranked review queue.
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
+            <span class="text-[#374151] text-xs">AHU-03 · 61% conf.</span>
+            <span class="bg-[#FEE2E2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">HIGH RISK</span>
+          </div>
+          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
+            <span class="text-[#374151] text-xs">VAV-12 · 74% conf.</span>
+            <span class="bg-[#FEE2E2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">HIGH RISK</span>
+          </div>
+          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
+            <span class="text-[#374151] text-xs">SD-44 · 83% conf.</span>
+            <span class="bg-[#FEF3C7] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">MEDIUM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow 2→3 -->
+      <div class="pipe-arrow flex items-center justify-center px-2 py-3 md:py-0">
+        <span class="hidden md:block">→</span>
+        <span class="md:hidden">↓</span>
+      </div>
+
+      <!-- Layer 3 -->
+      <div class="flex-1 bg-[#F0FDF4] border border-[#86EFAC] rounded-2xl md:rounded-l-none md:border-l-0 p-6">
+        <div class="text-[#166534] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 3</div>
+        <div class="text-[#14532D] font-bold text-base mb-3">Quick Review UX</div>
+        <div class="text-[#16A34A] text-xs leading-relaxed mb-4">
+          Sorted annotation queue. Keyboard-first. Progress tracking. Export gated on review complete.
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2">
+            <kbd>A</kbd><span class="text-[#166534] text-xs">Accept</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <kbd>C</kbd><span class="text-[#166534] text-xs">Correct</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <kbd>F</kbd><span class="text-[#166534] text-xs">Flag for team</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end pipeline -->
+
+    <!-- Assumptions -->
+    <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 mb-6 shadow-sm">
+      <div class="text-[#0F172A] font-bold text-sm mb-4">Key assumptions — stated explicitly</div>
+      <div class="space-y-3">
+        <div class="flex gap-3">
+          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-[#6B7280] text-[10px] font-bold">1</span>
+          </div>
+          <p class="text-[#374151] text-sm leading-relaxed">
+            <span class="font-semibold">Confidence scores already exist.</span> Beam AI's model produces a per-annotation confidence score internally. Quick Review surfaces this — it does not require training a new model. This is a UI change, not an ML change.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-[#6B7280] text-[10px] font-bold">2</span>
+          </div>
+          <p class="text-[#374151] text-sm leading-relaxed">
+            <span class="font-semibold">Dollar values are seeded, not custom.</span> Item values come from a standard HVAC price reference (RSMeans or equivalent) seeded into the platform. Estimators can override per project. No custom pricing engine required for v1.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
+            <span class="text-[#6B7280] text-[10px] font-bold">3</span>
+          </div>
+          <p class="text-[#374151] text-sm leading-relaxed">
+            <span class="font-semibold">"Review complete" is not 100%.</span> It means all High-Risk items reviewed plus overall review exceeding 60% complete. This is a deliberate design choice — perfect coverage is the enemy of shipping bids.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trade-off callout -->
+    <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-xl p-5">
+      <div class="flex gap-3">
+        <div class="text-[#F59E0B] text-lg mt-0.5 shrink-0">⚖</div>
+        <div>
+          <div class="text-[#92400E] font-bold text-sm mb-2">Key trade-off: false positives are acceptable</div>
+          <p class="text-[#78350F] text-sm leading-relaxed">
+            The prioritization model will sometimes surface false positives — items the AI was uncertain about that turn out to be correct. This is acceptable. The cost of an unnecessary check is 10 seconds. The cost of a missed misidentified AHU is $40,000. We bias toward over-flagging, not under-flagging.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 4: UX FLOW & WIREFRAMES
+════════════════════════════════════════ -->
+<section id="wireframes" class="py-16 sm:py-20 bg-white border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-5">
+
+    <div class="section-tag">Section 4 — UX Flow &amp; Wireframes</div>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">What the estimator actually sees</h2>
+    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Two views — the prioritized queue on the left, the drawing-context detail on the right. An estimator cycles between them via keyboard without ever losing their place.</p>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+      <!-- ── WIREFRAME 1: Prioritization View ── -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-6 h-6 rounded-full bg-[#0F172A] flex items-center justify-center">
+            <span class="text-white text-[10px] font-bold">1</span>
+          </div>
+          <span class="text-[#0F172A] font-bold text-sm">Prioritization View — Review Queue</span>
+        </div>
+
+        <!-- Wireframe container -->
+        <div class="wf-outer p-0 overflow-hidden">
+
+          <!-- WF Header bar -->
+          <div class="bg-[#E5E7EB] border-b border-[#D1D5DB] px-4 py-2.5 flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+            <span class="wf-label ml-2">beam.ai / review / drawing-40B</span>
+          </div>
+
+          <div class="p-4">
+            <!-- Queue header -->
+            <div class="mb-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[#0F172A] font-bold text-sm">Review Queue</div>
+                <div class="text-[#6B7280] text-xs">41 of 452 reviewed</div>
+              </div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[#EF4444] text-xs font-semibold">24 High-Risk</span>
+                <span class="text-[#9CA3AF] text-xs">·</span>
+                <span class="text-[#F59E0B] text-xs font-semibold">87 Medium</span>
+                <span class="text-[#9CA3AF] text-xs">·</span>
+                <span class="text-[#6B7280] text-xs">341 Low</span>
+              </div>
+              <!-- Progress bar -->
+              <div class="progress-bar-outer">
+                <div class="progress-bar-inner" style="width: 9%;"></div>
+              </div>
+              <div class="text-[10px] text-[#6B7280] mt-1">9% complete — 24 high-risk items remaining</div>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="flex gap-1 mb-4 bg-[#E5E7EB] rounded-lg p-0.5">
+              <button class="flex-1 bg-white rounded-md text-xs font-semibold text-[#0F172A] py-1.5 shadow-sm">All</button>
+              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">
+                <span class="text-[#EF4444]">●</span> High Risk
+              </button>
+              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">Flagged</button>
+              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">Unreviewed</button>
+            </div>
+
+            <!-- Annotation cards -->
+            <div class="space-y-2.5">
+
+              <!-- Card 1: HIGH RISK -->
+              <div class="bg-white border border-[#E5E7EB] risk-high rounded-lg p-3.5 cursor-pointer hover:shadow-sm transition-shadow">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="bg-[#FEE2E2] text-[#EF4444] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">HIGH RISK</span>
+                      <span class="text-[#0F172A] font-semibold text-xs">AHU-03</span>
+                    </div>
+                    <div class="text-[#374151] text-xs">Air Handling Unit · Floor 4</div>
+                  </div>
+                  <div class="text-right shrink-0 ml-2">
+                    <div class="text-[#EF4444] font-bold text-sm">$38,400</div>
+                    <div class="wf-label">est. value</div>
+                  </div>
+                </div>
+                <!-- Confidence bar -->
+                <div class="mb-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="wf-label">AI confidence</span>
+                    <span class="text-[#EF4444] text-xs font-bold">61%</span>
+                  </div>
+                  <div class="conf-bar">
+                    <div class="conf-fill-red" style="width: 61%;"></div>
+                  </div>
+                </div>
+                <div class="bg-[#FEF2F2] border border-[#FECACA] rounded-md px-2.5 py-1.5 mb-2.5">
+                  <span class="text-[#EF4444] text-[10px]">⚠</span>
+                  <span class="text-[#DC2626] text-[10px] ml-1">"Overlapping ductwork annotation — possible double-count"</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <button class="btn-accept">✓ Accept</button>
+                  <button class="btn-correct">✏ Correct</button>
+                  <button class="btn-flag">⚑ Flag</button>
+                </div>
+              </div>
+
+              <!-- Card 2: HIGH RISK -->
+              <div class="bg-white border border-[#E5E7EB] risk-high rounded-lg p-3.5">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="bg-[#FEE2E2] text-[#EF4444] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">HIGH RISK</span>
+                      <span class="text-[#0F172A] font-semibold text-xs">VAV-12</span>
+                    </div>
+                    <div class="text-[#374151] text-xs">Variable Air Volume Box · Floor 3, Zone B</div>
+                  </div>
+                  <div class="text-right shrink-0 ml-2">
+                    <div class="text-[#0F172A] font-bold text-sm">$2,100</div>
+                    <div class="wf-label">est. value</div>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="wf-label">AI confidence</span>
+                    <span class="text-[#EF4444] text-xs font-bold">74%</span>
+                  </div>
+                  <div class="conf-bar">
+                    <div class="conf-fill-red" style="width: 74%;"></div>
+                  </div>
+                </div>
+                <div class="bg-[#FEF2F2] border border-[#FECACA] rounded-md px-2.5 py-1.5 mb-2.5">
+                  <span class="text-[#EF4444] text-[10px]">⚠</span>
+                  <span class="text-[#DC2626] text-[10px] ml-1">"Symbol partially obscured by revision cloud"</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <button class="btn-accept">✓ Accept</button>
+                  <button class="btn-correct">✏ Correct</button>
+                  <button class="btn-flag">⚑ Flag</button>
+                </div>
+              </div>
+
+              <!-- Card 3: MEDIUM -->
+              <div class="bg-white border border-[#E5E7EB] risk-medium rounded-lg p-3.5">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="bg-[#FEF3C7] text-[#D97706] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">MEDIUM</span>
+                      <span class="text-[#0F172A] font-semibold text-xs">SD-44</span>
+                    </div>
+                    <div class="text-[#374151] text-xs">Supply Diffuser · Floor 2, Room 204</div>
+                  </div>
+                  <div class="text-right shrink-0 ml-2">
+                    <div class="text-[#0F172A] font-bold text-sm">$85</div>
+                    <div class="wf-label">est. value</div>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="wf-label">AI confidence</span>
+                    <span class="text-[#F59E0B] text-xs font-bold">83%</span>
+                  </div>
+                  <div class="conf-bar">
+                    <div class="conf-fill-amber" style="width: 83%;"></div>
+                  </div>
+                </div>
+                <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-md px-2.5 py-1.5 mb-2.5">
+                  <span class="text-[#F59E0B] text-[10px]">⚠</span>
+                  <span class="text-[#92400E] text-[10px] ml-1">"Detected as 24×24; spec schedule shows 18×18 in this zone"</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <button class="btn-accept">✓ Accept</button>
+                  <button class="btn-correct">✏ Correct</button>
+                  <button class="btn-flag">⚑ Flag</button>
+                </div>
+              </div>
+
+              <!-- Card 4: LOW -->
+              <div class="bg-white border border-[#E5E7EB] risk-low rounded-lg p-3.5 opacity-80">
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="flex items-center gap-2 mb-0.5">
+                      <span class="bg-[#F3F4F6] text-[#6B7280] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">LOW</span>
+                      <span class="text-[#374151] font-semibold text-xs">FD-118</span>
+                    </div>
+                    <div class="text-[#6B7280] text-xs">Flex Duct Connection · Floor 1</div>
+                  </div>
+                  <div class="text-right shrink-0 ml-2">
+                    <div class="text-[#6B7280] font-bold text-sm">$22</div>
+                    <div class="wf-label">est. value</div>
+                  </div>
+                </div>
+                <div class="mb-2.5">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="wf-label">AI confidence</span>
+                    <span class="text-[#22C55E] text-xs font-bold">96%</span>
+                  </div>
+                  <div class="conf-bar">
+                    <div class="conf-fill-green" style="width: 96%;"></div>
+                  </div>
+                </div>
+                <div class="flex gap-1.5">
+                  <button class="btn-accept">✓ Accept</button>
+                  <button class="btn-skip">Skip →</button>
+                </div>
+              </div>
+
+            </div><!-- end cards -->
+          </div>
+        </div><!-- end wf-outer -->
+
+        <!-- Annotation callout -->
+        <div class="mt-4 border-l-4 border-dashed border-[#9CA3AF] pl-4">
+          <p class="text-[#6B7280] text-xs italic leading-relaxed">
+            <span class="text-[#374151] font-semibold not-italic">Design rationale:</span> High-risk items always surface first regardless of their position in the drawing. The estimator never has to scroll to find what matters — the ranked queue does the triage work automatically. Low-value, high-confidence items like FD-118 get a single "Skip →" option to explicitly acknowledge without requiring a full review decision.
+          </p>
+        </div>
+      </div><!-- end WF1 -->
+
+
+      <!-- ── WIREFRAME 2: In-Context Validation Mode ── -->
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-6 h-6 rounded-full bg-[#0F172A] flex items-center justify-center">
+            <span class="text-white text-[10px] font-bold">2</span>
+          </div>
+          <span class="text-[#0F172A] font-bold text-sm">In-Context Validation — Detail View (AHU-03)</span>
+        </div>
+
+        <!-- Wireframe container -->
+        <div class="wf-outer p-0 overflow-hidden">
+
+          <!-- WF Header bar -->
+          <div class="bg-[#E5E7EB] border-b border-[#D1D5DB] px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
+              <span class="wf-label ml-2">beam.ai / review / AHU-03</span>
+            </div>
+            <span class="wf-label text-[10px]">Item 1 of 24 high-risk</span>
+          </div>
+
+          <div class="p-4 space-y-3">
+
+            <!-- Drawing thumbnail -->
+            <div>
+              <div class="wf-label mb-1.5">Drawing — Floor 4 Mechanical Plan (1:100)</div>
+              <div class="wf-box relative h-36 overflow-hidden">
+                <!-- Grid lines to simulate drawing -->
+                <div class="absolute inset-0 opacity-30" style="background-image: linear-gradient(#9CA3AF 1px, transparent 1px), linear-gradient(90deg, #9CA3AF 1px, transparent 1px); background-size: 24px 24px;"></div>
+                <!-- Duct lines -->
+                <div class="absolute" style="left:20%; top:30%; width:60%; height:2px; background:#9CA3AF;"></div>
+                <div class="absolute" style="left:40%; top:20%; width:2px; height:50%; background:#9CA3AF;"></div>
+                <div class="absolute" style="left:60%; top:30%; width:2px; height:30%; background:#9CA3AF;"></div>
+                <!-- Diffuser symbols -->
+                <div class="absolute w-4 h-4 border border-[#9CA3AF] rounded-sm bg-white/60 wf-label flex items-center justify-center text-[7px]" style="left:25%; top:25%;">SD</div>
+                <div class="absolute w-4 h-4 border border-[#9CA3AF] rounded-sm bg-white/60 wf-label flex items-center justify-center text-[7px]" style="left:55%; top:50%;">SD</div>
+                <!-- AHU bounding box — highlighted -->
+                <div class="absolute border-2 border-[#EF4444] rounded-sm bg-[#FEE2E2]/40" style="left:38%; top:18%; width:12%; height:16%;">
+                  <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#EF4444] text-white text-[8px] font-bold px-1 rounded whitespace-nowrap">AHU-03</div>
+                </div>
+                <!-- Adjacent annotation (AHU-02) — overlapping -->
+                <div class="absolute border border-dashed border-[#F59E0B] rounded-sm bg-[#FEF3C7]/30" style="left:43%; top:15%; width:10%; height:16%;">
+                  <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[#F59E0B] text-[7px] font-bold whitespace-nowrap">AHU-02</div>
+                </div>
+                <!-- Overlap indicator -->
+                <div class="absolute wf-label text-[8px] font-bold" style="right:5%; bottom:5%;">Grid C-7</div>
+              </div>
+              <div class="text-[10px] text-[#6B7280] mt-1.5">AHU-03 detected at Grid C-7, Floor 4</div>
+            </div>
+
+            <!-- Detection info -->
+            <div class="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-3">
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <div class="wf-label mb-0.5">Detected qty.</div>
+                  <div class="text-[#0F172A] font-bold text-sm">1 unit</div>
+                </div>
+                <div>
+                  <div class="wf-label mb-0.5">Type</div>
+                  <div class="text-[#0F172A] text-xs font-medium">Rooftop pkg.</div>
+                </div>
+                <div>
+                  <div class="wf-label mb-0.5">Capacity</div>
+                  <div class="text-[#0F172A] text-xs font-medium">20 ton</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conflict callout -->
+            <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-lg p-3">
+              <div class="flex gap-2">
+                <span class="text-[#F59E0B] shrink-0">⚠</span>
+                <div>
+                  <div class="text-[#92400E] font-semibold text-xs mb-1">Possible double-count detected</div>
+                  <div class="text-[#78350F] text-xs leading-relaxed">Adjacent annotation AHU-02 overlaps bounding box by 34%. Both annotations detected within a 2-ft radius. Verify against equipment schedule — one may be a duplicate detection.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Equipment schedule reference -->
+            <div>
+              <div class="wf-label mb-1.5">Equipment Schedule Reference — AHU Units</div>
+              <div class="border border-[#E5E7EB] rounded-lg overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead>
+                    <tr class="bg-[#E5E7EB]">
+                      <th class="wf-label text-left px-3 py-1.5">Tag</th>
+                      <th class="wf-label text-left px-3 py-1.5">Type</th>
+                      <th class="wf-label text-left px-3 py-1.5">Capacity</th>
+                      <th class="wf-label text-left px-3 py-1.5">Floor</th>
+                      <th class="wf-label text-left px-3 py-1.5">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[#F3F4F6]">
+                    <tr class="bg-white">
+                      <td class="px-3 py-1.5 text-[#374151]">AHU-01</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">Roof pkg.</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">15T</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">2</td>
+                      <td class="px-3 py-1.5"><span class="text-[#22C55E] font-semibold">✓ Match</span></td>
+                    </tr>
+                    <tr class="bg-white">
+                      <td class="px-3 py-1.5 text-[#374151]">AHU-02</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">Roof pkg.</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">20T</td>
+                      <td class="px-3 py-1.5 text-[#6B7280]">4</td>
+                      <td class="px-3 py-1.5"><span class="text-[#22C55E] font-semibold">✓ Match</span></td>
+                    </tr>
+                    <tr class="bg-[#FEF2F2] border-l-2 border-[#EF4444]">
+                      <td class="px-3 py-1.5 text-[#0F172A] font-semibold">AHU-03</td>
+                      <td class="px-3 py-1.5 text-[#374151]">Roof pkg.</td>
+                      <td class="px-3 py-1.5 text-[#374151]">20T</td>
+                      <td class="px-3 py-1.5 text-[#374151]">4</td>
+                      <td class="px-3 py-1.5"><span class="text-[#EF4444] font-semibold text-[10px]">← Reviewing</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Action row -->
+            <div class="border-t border-[#E5E7EB] pt-3">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button class="btn-skip flex items-center gap-1">← Prev</button>
+                <div class="flex gap-1.5 flex-1">
+                  <button class="btn-accept flex-1 text-center">
+                    <kbd class="mr-1">A</kbd>Accept
+                  </button>
+                  <button class="btn-correct flex-1 text-center">
+                    <kbd class="mr-1">C</kbd>Correct
+                  </button>
+                  <button class="btn-flag flex-1 text-center">
+                    <kbd class="mr-1">F</kbd>Flag
+                  </button>
+                </div>
+                <button class="btn-skip flex items-center gap-1">Next →</button>
+              </div>
+            </div>
+
+            <!-- Keyboard shortcut strip -->
+            <div class="bg-[#0F172A] rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <div class="flex items-center gap-1.5">
+                <kbd>A</kbd><span class="text-[#9CA3AF] text-[10px]">Accept</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <kbd>C</kbd><span class="text-[#9CA3AF] text-[10px]">Correct</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <kbd>F</kbd><span class="text-[#9CA3AF] text-[10px]">Flag</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <kbd>←</kbd><kbd>→</kbd><span class="text-[#9CA3AF] text-[10px]">Navigate</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <kbd>Esc</kbd><span class="text-[#9CA3AF] text-[10px]">Back to queue</span>
+              </div>
+            </div>
+
+          </div><!-- end inner p-4 -->
+        </div><!-- end wf-outer -->
+
+        <!-- Annotation callout -->
+        <div class="mt-4 border-l-4 border-dashed border-[#9CA3AF] pl-4">
+          <p class="text-[#6B7280] text-xs italic leading-relaxed">
+            <span class="text-[#374151] font-semibold not-italic">Design rationale:</span> The drawing context stays visible while the estimator reviews. When they press [A], [C], or [F], the view advances to the next item — the drawing thumbnail updates automatically. The estimator never loses their place, never opens a second window, and never touches the mouse if they don't need to. The equipment schedule reference is surfaced automatically when the AI flags a potential double-count.
+          </p>
+        </div>
+      </div><!-- end WF2 -->
+
+    </div><!-- end grid -->
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     SECTION 5: ROLLOUT PLAN + RISK
+════════════════════════════════════════ -->
+<section id="rollout" class="py-16 sm:py-20">
+  <div class="max-w-6xl mx-auto px-5">
+
+    <div class="section-tag">Section 5 — Rollout Plan</div>
+    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">How to ship this in three moves</h2>
+    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Each version builds evidence for the next. We don't ship the full prioritization logic until we've validated that surfacing uncertainty changes estimator behavior.</p>
+
+    <!-- Rollout table -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 rounded-2xl overflow-hidden border border-[#E5E7EB] mb-10 shadow-sm">
+
+      <!-- v0 -->
+      <div class="bg-white p-6 border-b md:border-b-0 md:border-r border-[#E5E7EB]">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="bg-[#F3F4F6] text-[#374151] text-xs font-bold px-2 py-0.5 rounded-full">v0</span>
+          <span class="text-[#6B7280] text-xs">Weeks 1–4</span>
+        </div>
+        <div class="text-[#0F172A] font-bold text-base mb-1">"Confidence Surfacing"</div>
+        <div class="text-[#2563EB] text-xs font-medium mb-4">Zero model changes required</div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="text-[#374151] text-xs font-semibold mb-1.5">Scope</div>
+            <p class="text-[#6B7280] text-sm leading-relaxed">Show AI confidence score on every annotation. No queue ranking yet. Just make uncertainty visible to the estimator.</p>
+          </div>
+          <div>
+            <div class="text-[#374151] text-xs font-semibold mb-1.5">Metric to watch</div>
+            <p class="text-[#6B7280] text-sm leading-relaxed">Do estimators spend more time on low-confidence items? Measured via time-on-item telemetry per annotation.</p>
+          </div>
+          <div class="bg-[#F9FAFB] rounded-lg p-3">
+            <div class="text-[#374151] text-xs font-semibold mb-1">Why this first</div>
+            <p class="text-[#6B7280] text-xs leading-relaxed">Zero new model work. Uses existing confidence scores already produced by Beam's pipeline. Proves the hypothesis — that surfacing uncertainty changes review behavior — before building the full ranking system.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- v1 -->
+      <div class="bg-[#EFF6FF] p-6 border-b md:border-b-0 md:border-r border-[#BFDBFE]">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="bg-[#BFDBFE] text-[#1D4ED8] text-xs font-bold px-2 py-0.5 rounded-full">v1</span>
+          <span class="text-[#3B82F6] text-xs">Weeks 5–12</span>
+        </div>
+        <div class="text-[#1E3A8A] font-bold text-base mb-1">"Risk-Ranked Queue"</div>
+        <div class="text-[#2563EB] text-xs font-medium mb-4">Core product — ship when v0 validates</div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="text-[#1D4ED8] text-xs font-semibold mb-1.5">Scope</div>
+            <p class="text-[#3B82F6] text-sm leading-relaxed">Add dollar-value weighting, ranked queue, keyboard shortcuts [A]/[C]/[F], and progress bar showing % reviewed vs. review complete threshold.</p>
+          </div>
+          <div>
+            <div class="text-[#1D4ED8] text-xs font-semibold mb-1.5">Metric to watch</div>
+            <p class="text-[#3B82F6] text-sm leading-relaxed">Review completion time per drawing. Target: under 25 min for a 40-sheet job.</p>
+          </div>
+          <div class="bg-white/60 rounded-lg p-3">
+            <div class="text-[#1D4ED8] text-xs font-semibold mb-1">Why this order</div>
+            <p class="text-[#3B82F6] text-xs leading-relaxed">v0 data tells us which item categories estimators over-check. v1 uses that to calibrate the risk model before shipping it to all users. We're not guessing at the weights — we're learning them.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- v2 -->
+      <div class="bg-[#F0FDF4] p-6">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="bg-[#86EFAC] text-[#166534] text-xs font-bold px-2 py-0.5 rounded-full">v2</span>
+          <span class="text-[#16A34A] text-xs">Weeks 13–20</span>
+        </div>
+        <div class="text-[#14532D] font-bold text-base mb-1">"Smart Review Complete"</div>
+        <div class="text-[#22C55E] text-xs font-medium mb-4">Export gate + session summary</div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="text-[#166534] text-xs font-semibold mb-1.5">Scope</div>
+            <p class="text-[#16A34A] text-sm leading-relaxed">"Review Complete" state triggered when all High-Risk items are reviewed and overall review exceeds 60%. Export is gated on this state. A session summary appears before export showing what was accepted, corrected, and flagged.</p>
+          </div>
+          <div>
+            <div class="text-[#166534] text-xs font-semibold mb-1.5">Metric to watch</div>
+            <p class="text-[#16A34A] text-sm leading-relaxed">Post-export error rate vs. pre-Quick Review baseline.</p>
+          </div>
+          <div class="bg-white/60 rounded-lg p-3">
+            <div class="text-[#166534] text-xs font-semibold mb-1">Why export gate</div>
+            <p class="text-[#16A34A] text-xs leading-relaxed">The gate is the product making a commitment to the estimator: "this is complete enough to bid on." Without it, "Review Complete" is advisory and gets ignored.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end rollout table -->
+
+    <!-- Risk callout -->
+    <div class="bg-[#0F172A] rounded-2xl p-6 sm:p-8">
+      <div class="flex gap-4">
+        <div class="text-[#EF4444] text-2xl shrink-0 mt-0.5">⚡</div>
+        <div>
+          <div class="text-white font-bold text-base mb-3">The risk to test before full build</div>
+          <p class="text-[#94A3B8] text-sm leading-relaxed mb-4">
+            The prioritization model assumes AI confidence scores are calibrated — that a 61% confidence score genuinely reflects a higher error rate than a 91% score, at scale, across drawing types and carriers.
+          </p>
+          <p class="text-[#94A3B8] text-sm leading-relaxed mb-4">
+            If confidence scores are not calibrated — if the AI is equally uncertain about everything — the entire prioritization layer produces no value. High-risk items surface, but they're no more likely to be wrong than low-risk ones. The estimator learns this within a week and stops trusting the queue.
+          </p>
+          <div class="bg-white/[0.06] border border-white/10 rounded-xl p-4">
+            <div class="text-[#F59E0B] font-semibold text-sm mb-2">The test to run before v1 ships</div>
+            <p class="text-[#CBD5E1] text-sm leading-relaxed">Take 50 historical drawings with known correction data. Rank every annotation by AI confidence score. Verify that items in the bottom confidence quartile were corrected at a meaningfully higher rate than the top quartile. If the correction rate doesn't differ by at least 2×, we redefine "risk" using item dollar value alone — and note that the confidence score is decorative, not predictive. Either outcome is useful. Not testing this before shipping v1 is not.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer class="bg-[#0F172A] py-10 border-t border-white/10">
+  <div class="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded-lg bg-[#2563EB] flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L7 2L12 7L7 12L2 7Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="text-white font-bold text-sm">Beam AI</span>
+      <span class="text-white/30">·</span>
+      <span class="text-white/50 text-xs">Quick Review Workflow — PM Case Study</span>
+    </div>
+    <div class="flex flex-col sm:flex-row items-center gap-3">
+      <span class="text-white/40 text-xs">Naman Gautam · PM Case Study · 2026</span>
+      <a href="https://linkedin.com/in/namangautam08" target="_blank"
+         class="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="12" height="12" rx="2"/><path d="M3.5 5.5h1.5V10H3.5zm.75-2.25a.875.875 0 100 1.75.875.875 0 000-1.75zM6.5 5.5H8v.65c.3-.45.85-.75 1.5-.75C10.9 5.4 11 6.5 11 7.5V10H9.5V7.75c0-.6-.1-1.25-.75-1.25-.75 0-.75.7-.75 1.25V10H6.5z" fill="white"/></svg>
+        linkedin.com/in/namangautam08
+      </a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
