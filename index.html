@@ -1,1065 +1,1541 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beam AI — Quick Review Workflow · PM Case Study</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy:  '#0F172A',
-            beam:  '#2563EB',
-            risk:  '#EF4444',
-            amber: '#F59E0B',
-            go:    '#22C55E',
-          },
-          fontFamily: { inter: ['Inter', 'system-ui', 'sans-serif'] },
-        }
-      }
-    }
-  </script>
-  <style>
-    *, body { font-family: 'Inter', system-ui, sans-serif; }
-    html { scroll-behavior: smooth; }
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beam AI — Quick Review Workflow · PM Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1a2332;--blue:#2563eb;--red:#dc2626;--orange:#f59e0b;--green:#16a34a;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;--r12:12px;--r8:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 16px rgba(0,0,0,.1);--t:.2s ease}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.5;color:var(--g900);background:#fff;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{border:none;background:none;cursor:pointer;font-family:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--g300);border-radius:3px}
 
-    /* ── Confidence bar ── */
-    .conf-bar { height: 4px; border-radius: 2px; background: #E5E7EB; overflow: hidden; }
-    .conf-fill-red    { height: 4px; background: #EF4444; border-radius: 2px; }
-    .conf-fill-amber  { height: 4px; background: #F59E0B; border-radius: 2px; }
-    .conf-fill-green  { height: 4px; background: #22C55E; border-radius: 2px; }
+/* ── Nav ── */
+#main-nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--navy);height:56px;display:flex;align-items:center;box-shadow:0 1px 0 rgba(255,255,255,.07)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;gap:12px}
+.nav-brand{color:#fff;font-weight:700;font-size:15px;white-space:nowrap;flex-shrink:0}
+.nav-sep{color:rgba(255,255,255,.2);flex-shrink:0;font-size:13px}
+.nav-pills{display:flex;gap:2px;flex:1;overflow:hidden}
+.nav-pill{padding:5px 13px;border-radius:20px;font-size:13px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;transition:var(--t);white-space:nowrap;border:none;background:none}
+.nav-pill:hover{color:rgba(255,255,255,.8)}
+.nav-pill.active{background:var(--blue);color:#fff}
+.proto-nav{display:none;align-items:center;gap:8px;flex:1}
+.proto-back{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;padding:5px 10px;border-radius:6px;transition:var(--t);cursor:pointer;border:none;background:none;white-space:nowrap}
+.proto-back:hover{color:#fff;background:rgba(255,255,255,.08)}
+.proto-steps{display:flex;align-items:center;gap:2px}
+.proto-step{font-size:13px;font-weight:500;padding:5px 12px;border-radius:20px;transition:var(--t);white-space:nowrap;cursor:pointer;color:rgba(255,255,255,.3);border:none;background:none}
+.proto-step.active{background:var(--blue);color:#fff}
+.proto-step.done{color:rgba(255,255,255,.6)}
+.proto-step.locked{cursor:default}
+.proto-step-dot{color:rgba(255,255,255,.2);font-size:11px;padding:0 2px}
+.nav-cta{flex-shrink:0;padding:6px 14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:var(--t)}
+.nav-cta:hover{background:rgba(255,255,255,.14);color:#fff}
+.nav-right{margin-left:auto;flex-shrink:0}
 
-    /* ── Wireframe aesthetic ── */
-    .wf-outer { background: #F3F4F6; border: 1.5px solid #D1D5DB; border-radius: 12px; }
-    .wf-box   { background: #E5E7EB; border: 1px solid #D1D5DB; border-radius: 6px; }
-    .wf-label { color: #6B7280; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; }
-    .wf-text  { color: #374151; }
+/* ── Layout ── */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.section{padding:80px 0}
+.section-label{display:inline-block;padding:4px 12px;background:#ecfdf5;color:var(--green);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:20px;margin-bottom:16px}
+.section-title{font-size:36px;font-weight:800;line-height:1.2;color:var(--g900);margin-bottom:16px}
+.section-body{font-size:18px;color:var(--g600);max-width:720px;line-height:1.6;margin-bottom:48px}
 
-    /* ── Annotation callout ── */
-    .annot {
-      background: #FAFAFA;
-      border: 1.5px dashed #9CA3AF;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 12px;
-      font-style: italic;
-      color: #6B7280;
-      line-height: 1.5;
-      position: relative;
-    }
-    .annot::before {
-      content: '←';
-      position: absolute;
-      left: -22px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9CA3AF;
-      font-style: normal;
-      font-size: 14px;
-    }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--r8);font-size:15px;font-weight:600;cursor:pointer;transition:var(--t);border:none}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:#253350}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#1d4ed8}
+.btn-outline{background:#fff;color:var(--g700);border:1.5px solid var(--g200)}.btn-outline:hover{background:var(--g50);border-color:var(--g300)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#15803d}
 
-    /* ── Journey arrow ── */
-    .journey-arrow { color: #94A3B8; font-size: 20px; line-height: 1; }
+/* ── Hero ── */
+#hero{padding:128px 0 80px;background:#fff}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--g50);border:1px solid var(--g200);border-radius:20px;font-size:13px;font-weight:500;color:var(--g600);margin-bottom:24px}
+.hero-h1{font-size:52px;font-weight:800;line-height:1.1;color:var(--g900);max-width:640px;margin-bottom:20px}
+.hero-sub{font-size:19px;color:var(--g600);max-width:560px;line-height:1.6;margin-bottom:36px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:56px}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.hero-stat{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:20px 24px;transition:var(--t)}
+.hero-stat-val{font-size:28px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.hero-stat-label{font-size:14px;color:var(--g600);display:flex;align-items:center;gap:5px}
 
-    /* ── Layer pipeline arrow ── */
-    .pipe-arrow { color: #2563EB; font-weight: 700; font-size: 22px; line-height: 1; flex-shrink: 0; }
+/* ── Persona ── */
+.persona-card{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:28px;box-shadow:var(--shadow);display:flex;gap:24px;align-items:flex-start;margin-bottom:32px}
+.persona-avatar{width:52px;height:52px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0}
+.persona-name{font-size:18px;font-weight:700;color:var(--g900);margin-bottom:4px}
+.persona-title{font-size:14px;color:var(--g600);margin-bottom:16px}
+.persona-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ps-cell{background:var(--g50);border:1px solid var(--g200);border-radius:8px;padding:12px 14px;text-align:center}
+.ps-val{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.ps-label{font-size:12px;color:var(--g600)}
 
-    /* ── kbd chip ── */
-    kbd {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-width: 24px; height: 22px; padding: 0 6px;
-      background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 4px;
-      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
-      color: #374151; letter-spacing: 0.03em;
-    }
+/* ── JTBD ── */
+.jtbd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:48px}
+.jtbd{border-radius:10px;padding:24px}
+.jtbd.eff{background:#eff6ff;border:1px solid #bfdbfe}
+.jtbd.conf{background:#f0fdf4;border:1px solid #bbf7d0}
+.jtbd-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.jtbd.eff .jtbd-lbl{color:var(--blue)}
+.jtbd.conf .jtbd-lbl{color:var(--green)}
+.jtbd-q{font-size:15px;color:var(--g700);line-height:1.6;font-style:italic}
 
-    /* ── Action button variants ── */
-    .btn-accept  { background: #DCFCE7; border: 1px solid #86EFAC; color: #166534; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
-    .btn-correct { background: #EFF6FF; border: 1px solid #93C5FD; color: #1D4ED8; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
-    .btn-flag    { background: #FFF7ED; border: 1px solid #FCD34D; color: #92400E; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
-    .btn-skip    { background: #F9FAFB; border: 1px solid #D1D5DB; color: #6B7280; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+/* ── Journey ── */
+.journey-wrap{overflow-x:auto;padding-bottom:8px}
+.journey{display:flex;align-items:flex-start;min-width:700px}
+.j-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
+.j-conn{padding-top:14px;color:var(--g300);font-size:18px;line-height:1}
+.j-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
+.j-dot.ok{background:var(--navy)}
+.j-dot.bad{background:var(--red)}
+.j-time{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.03em;margin-bottom:3px}
+.j-event{font-size:13px;font-weight:600;color:var(--g900);margin-bottom:5px}
+.j-detail{font-size:12px;color:var(--g600);line-height:1.4;padding:0 6px}
 
-    /* ── Progress ring ── */
-    .progress-bar-outer { background: #E5E7EB; border-radius: 4px; height: 6px; width: 100%; }
-    .progress-bar-inner { background: #2563EB; border-radius: 4px; height: 6px; }
+/* ── Metrics ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.mc{border-radius:var(--r12);padding:28px;border:1px solid}
+.mc.blue{background:#eff6ff;border-color:#bfdbfe}
+.mc.green{background:#f0fdf4;border-color:#bbf7d0}
+.mc.amber{background:#fffbeb;border-color:#fde68a}
+.mc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.mc.blue .mc-lbl{color:var(--blue)}
+.mc.green .mc-lbl{color:var(--green)}
+.mc.amber .mc-lbl{color:#92400e}
+.mc-target{font-size:36px;font-weight:800;margin-bottom:4px}
+.mc.blue .mc-target{color:var(--blue)}
+.mc.green .mc-target{color:var(--green)}
+.mc.amber .mc-target{color:#92400e}
+.mc-note{font-size:13px;color:var(--g600);margin-bottom:16px}
+.mc-instr{font-size:13px;color:var(--g600);padding-top:16px;border-top:1px solid;line-height:1.5}
+.mc.blue .mc-instr{border-color:#bfdbfe}
+.mc.green .mc-instr{border-color:#bbf7d0}
+.mc.amber .mc-instr{border-color:#fde68a}
 
-    /* ── Risk border colors ── */
-    .risk-high   { border-left: 4px solid #EF4444 !important; }
-    .risk-medium { border-left: 4px solid #F59E0B !important; }
-    .risk-low    { border-left: 4px solid #9CA3AF !important; }
+/* ── Solution pipeline ── */
+.pipeline{display:flex;align-items:stretch;gap:0}
+.pl-step{flex:1}
+.pl-card{border-radius:var(--r12);padding:28px;border:1px solid;height:100%}
+.pl-card.blue{background:#eff6ff;border-color:#bfdbfe}
+.pl-card.amber{background:#fffbeb;border-color:#fde68a}
+.pl-card.green{background:#f0fdf4;border-color:#bbf7d0}
+.pl-icon{font-size:28px;margin-bottom:12px}
+.pl-name{font-size:18px;font-weight:700;color:var(--g900);margin-bottom:8px}
+.pl-desc{font-size:14px;color:var(--g600);line-height:1.5}
+.pl-arrow{display:flex;align-items:center;padding:0 10px;color:var(--blue);font-size:22px;font-weight:700;flex-shrink:0}
+.assumptions{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:24px;margin-top:24px}
+.assumptions h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);margin-bottom:12px}
+.assumptions ol{padding-left:20px}
+.assumptions li{font-size:14px;color:var(--g600);line-height:1.6;margin-bottom:6px}
+.tradeoff{background:var(--navy);border-radius:var(--r12);padding:24px;margin-top:16px;color:#fff}
+.tradeoff-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:8px}
+.tradeoff p{font-size:15px;color:rgba(255,255,255,.8);line-height:1.6}
+.tradeoff strong{color:#fff}
 
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+/* ── Wireframes ── */
+.wf-grid{display:grid;grid-template-columns:60fr 40fr;gap:24px;align-items:start}
+.wf-outer{background:#f3f4f6;border:1.5px solid var(--g200);border-radius:var(--r12);overflow:hidden}
+.wf-chrome{background:var(--g200);padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--g300)}
+.wf-dot{width:10px;height:10px;border-radius:50%}
+.wf-url{flex:1;height:20px;background:#fff;border-radius:4px;margin:0 8px;display:flex;align-items:center;padding:0 8px}
+.wf-url span{font-size:10px;color:var(--g400)}
+.wf-body{padding:16px}
+.wf-hdr{font-weight:600;font-size:13px;color:var(--g900);margin-bottom:8px}
+.wf-prog{height:6px;background:var(--g200);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.wf-prog-fill{height:100%;background:var(--navy);border-radius:3px}
+.wf-tabs{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.wf-tab{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:600;border:1px solid}
+.wf-tab.on{background:var(--red);color:#fff;border-color:var(--red)}
+.wf-tab.off{background:#fff;color:var(--g600);border-color:var(--g200)}
+.wf-item{background:#fff;border:1px solid var(--g200);border-radius:8px;padding:10px 12px;margin-bottom:6px;border-left:3px solid}
+.wf-item.h{border-left-color:var(--red)}
+.wf-item.m{border-left-color:var(--orange)}
+.wf-item.l{border-left-color:var(--g300)}
+.wf-irow{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.wf-iname{font-size:12px;font-weight:600;color:var(--g900)}
+.wf-isub{font-size:10px;color:var(--g400)}
+.wf-ival{font-size:12px;font-weight:700;color:var(--g900)}
+.wf-conf{height:4px;background:var(--g200);border-radius:2px;overflow:hidden;margin-bottom:6px}
+.wf-conf-fill{height:100%;border-radius:2px}
+.wf-acts{display:flex;gap:5px}
+.wf-act{padding:3px 7px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid}
+.wf-act-a{background:#dcfce7;color:#166534;border-color:#86efac}
+.wf-act-c{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+.wf-act-f{background:#fef2f2;color:var(--red);border-color:#fca5a5}
+.wf-detail{padding:16px}
+.wf-d-id{font-size:15px;font-weight:700;color:var(--g900);margin-bottom:4px}
+.wf-d-badge{display:inline-block;padding:2px 7px;background:#fee2e2;color:var(--red);border-radius:4px;font-size:10px;font-weight:700;margin-bottom:10px}
+.wf-dt{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+.wf-dt td{padding:4px 5px;border-bottom:1px solid var(--g100);color:var(--g700)}
+.wf-dt td:first-child{color:var(--g400);width:70px}
+.wf-flag{background:#fefce8;border:1px solid #fde68a;border-left:3px solid var(--orange);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:#92400e;line-height:1.4}
+.wf-sched{width:100%;border-collapse:collapse;font-size:11px}
+.wf-sched th{padding:5px 8px;background:var(--g50);color:var(--g400);font-weight:700;text-align:left;border-bottom:1px solid var(--g200);font-size:10px;text-transform:uppercase}
+.wf-sched td{padding:5px 8px;border-bottom:1px solid var(--g100)}
+.wf-sched tr.rev td{background:#fef2f2;font-weight:600}
 
-    /* section label */
-    .section-tag {
-      display: inline-block;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 3px 10px; border-radius: 20px;
-      background: #EFF6FF; color: #2563EB; margin-bottom: 12px;
-    }
-  </style>
+/* ── Rollout ── */
+.rollout-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.rc{border-radius:var(--r12);overflow:hidden;border:1px solid var(--g200);box-shadow:var(--shadow)}
+.rc-hdr{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid}
+.rc-hdr.v0{background:var(--g50);border-color:var(--g200)}
+.rc-hdr.v1{background:#eff6ff;border-color:#bfdbfe}
+.rc-hdr.v2{background:#f0fdf4;border-color:#bbf7d0}
+.rc-ver{font-size:20px;font-weight:800;color:var(--g900)}
+.rc-time{font-size:12px;font-weight:600;color:var(--g600)}
+.rc-body{padding:20px;background:#fff}
+.rc-scope{font-size:14px;color:var(--g600);line-height:1.6;margin-bottom:16px}
+.rc-mlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);margin-bottom:4px}
+.rc-mval{font-size:14px;font-weight:600;color:var(--g900);margin-bottom:10px}
+.rc-rat{font-size:13px;color:var(--g400);font-style:italic;line-height:1.4}
+.risk-callout{background:var(--navy);border-radius:var(--r12);padding:28px;margin-top:24px}
+.risk-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:10px}
+.risk-callout p{font-size:15px;color:rgba(255,255,255,.8);line-height:1.6}
+.risk-callout strong{color:#fff}
+
+/* ══ PROTOTYPE ══ */
+#proto-view{display:none;padding-top:56px;min-height:100vh}
+.proto-step-view{display:none}
+.proto-step-view.active{display:block}
+
+/* Step 1 */
+.up-wrap{max-width:560px;margin:0 auto;padding:64px 24px;text-align:center}
+.up-h{font-size:28px;font-weight:700;color:var(--g900);margin-bottom:8px}
+.up-sub{font-size:16px;color:var(--g600);margin-bottom:32px}
+.drop-zone{border:2px dashed var(--g300);border-radius:var(--r12);padding:48px 32px;cursor:pointer;transition:var(--t);background:var(--g50)}
+.drop-zone:hover,.drop-zone.over{border-color:var(--blue);background:#eff6ff}
+.dz-icon{font-size:40px;margin-bottom:12px}
+.dz-main{font-size:16px;font-weight:600;color:var(--g900);margin-bottom:4px}
+.dz-sub{font-size:14px;color:var(--g400)}
+.up-sep{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--g400);font-size:14px}
+.up-sep::before,.up-sep::after{content:'';flex:1;height:1px;background:var(--g200)}
+.up-progress{display:none;margin-top:24px}
+.up-progress.on{display:block}
+.up-plbl{font-size:14px;font-weight:500;color:var(--g900);margin-bottom:10px}
+.up-track{height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+.up-fill{height:100%;background:var(--navy);border-radius:4px;transition:width .1s linear;width:0}
+.up-note{font-size:13px;color:var(--g400);margin-top:32px;line-height:1.5}
+input[type=file]{display:none}
+
+/* Step 2 */
+.q-wrap{max-width:1200px;margin:0 auto;padding:28px 24px 120px}
+.q-hdr{margin-bottom:20px}
+.q-title{font-size:20px;font-weight:700;color:var(--g900);margin-bottom:10px}
+.q-prog-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.q-prog-track{flex:1;height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+.q-prog-fill{height:100%;background:var(--navy);border-radius:4px;transition:width .4s ease}
+.q-prog-lbl{font-size:13px;color:var(--g600);white-space:nowrap}
+.filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.ftab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g600);cursor:pointer;transition:var(--t)}
+.ftab:hover{border-color:var(--g300);color:var(--g900)}
+.ftab.fa{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ftab.fh{background:var(--red);color:#fff;border-color:var(--red)}
+.ftab.fm{background:var(--orange);color:#fff;border-color:var(--orange)}
+.ftab.fl{background:var(--g600);color:#fff;border-color:var(--g600)}
+.ftab.ff{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.ic{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:16px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;border-left:4px solid;position:relative}
+.ic:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.10)}
+.ic.sel{box-shadow:0 0 0 2px var(--blue);border-color:var(--blue)!important}
+.ic.ih{border-left-color:var(--red)}
+.ic.im{border-left-color:var(--orange)}
+.ic.il{border-left-color:var(--g300)}
+.ic.done{opacity:.6}
+.ic-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.ic-id{font-size:16px;font-weight:700;color:var(--g900)}
+.ic-desc{font-size:13px;color:var(--g600);margin-top:1px}
+.ic-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.ic-val{font-size:16px;font-weight:700;color:var(--g900)}
+.rpill{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.rpill.rh{background:#fee2e2;color:var(--red)}
+.rpill.rm{background:#fef3c7;color:#92400e}
+.rpill.rl{background:var(--g100);color:var(--g600)}
+.conf-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.conf-lbl{font-size:12px;color:var(--g400);white-space:nowrap}
+.conf-track{flex:1;height:6px;background:var(--g200);border-radius:3px;overflow:hidden}
+.conf-bar{height:100%;border-radius:3px}
+.conf-bar.ch{background:var(--red)}
+.conf-bar.cm{background:var(--orange)}
+.conf-bar.cl{background:var(--green)}
+.conf-pct{font-size:12px;font-weight:600;white-space:nowrap}
+.conf-pct.ch{color:var(--red)}
+.conf-pct.cm{color:#92400e}
+.conf-pct.cl{color:var(--green)}
+.ic-sbadge{position:absolute;top:12px;right:48px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+.ic-sbadge.sa{background:#dcfce7;color:#166534}
+.ic-sbadge.sc{background:#eff6ff;color:#1d4ed8}
+.ic-sbadge.sf{background:#fef2f2;color:var(--red)}
+.q-hint{background:var(--g900);padding:10px 24px;display:flex;align-items:center;gap:20px;position:fixed;bottom:0;left:0;right:0;z-index:100}
+.hint-i{font-size:12px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:6px}
+kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;background:#1e293b;border:1px solid #334155;border-radius:3px;font-family:inherit;font-size:10px;font-weight:700;color:#cbd5e1}
+.hint-btn{margin-left:auto;padding:5px 14px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.q-empty{text-align:center;padding:48px;color:var(--g400);font-size:15px}
+
+/* Step 3 */
+.dv-wrap{max-width:1200px;margin:0 auto;padding:24px 24px 100px}
+.dv-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.dv-crumb{font-size:14px;color:var(--g600)}
+.dv-crumb b{color:var(--g900);font-weight:600}
+.dv-navs{display:flex;gap:8px}
+.dv-nav{padding:7px 18px;border-radius:var(--r8);font-size:14px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:var(--t)}
+.dv-nav:hover:not(:disabled){background:var(--g50)}
+.dv-nav:disabled{opacity:.35;cursor:default}
+.dv-split{display:grid;grid-template-columns:40% 60%;gap:28px}
+.dv-item-id{font-size:24px;font-weight:800;color:var(--g900);margin-bottom:6px}
+.dv-item-sub{font-size:15px;color:var(--g600);margin-bottom:12px}
+.dv-badges{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.dv-val{font-size:22px;font-weight:700;color:var(--g900)}
+.detail-tbl{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:18px}
+.detail-tbl tr{border-bottom:1px solid var(--g100)}
+.detail-tbl td{padding:10px 0}
+.detail-tbl td:first-child{color:var(--g400);width:130px;font-size:13px}
+.detail-tbl td:last-child{font-weight:500;color:var(--g900)}
+.flag-box{background:#fefce8;border:1px solid #fde68a;border-left:3px solid var(--orange);border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.flag-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#92400e;margin-bottom:5px}
+.flag-txt{font-size:14px;color:#78350f;line-height:1.5}
+.sched-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
+.sched-tbl th{padding:8px 12px;background:var(--g50);color:var(--g400);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:1px solid var(--g200)}
+.sched-tbl td{padding:8px 12px;border-bottom:1px solid var(--g100)}
+.sched-tbl tr.rev{background:#fef2f2}
+.sched-tbl tr.rev td{font-weight:600}
+.match{color:var(--green);font-weight:600}
+.revtag{color:var(--red);font-weight:600}
+.action-row{display:flex;gap:8px;flex-wrap:wrap}
+.abn{padding:10px 20px;border-radius:var(--r8);font-size:14px;font-weight:600;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:6px;border:1.5px solid}
+.abn kbd{font-size:10px;padding:1px 4px;border-radius:3px}
+.ab-acc{background:#dcfce7;color:#166534;border-color:#86efac}.ab-acc:hover:not(:disabled){background:#bbf7d0}
+.ab-cor{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}.ab-cor:hover:not(:disabled){background:#dbeafe}
+.ab-flg{background:#fef2f2;color:var(--red);border-color:#fca5a5}.ab-flg:hover:not(:disabled){background:#fee2e2}
+.abn:disabled{opacity:.4;cursor:default}
+.ab-nav{background:#fff;color:var(--g700);border-color:var(--g200)}.ab-nav:hover{background:var(--g50)}
+.dv-kbar{background:var(--g900);padding:10px 0;position:fixed;bottom:0;left:0;right:0;z-index:100}
+.dv-kbar-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:20px;align-items:center}
+.drawing-svg{width:100%;height:340px;border:1px solid var(--g300);border-radius:var(--r12);background:#e8edf2;overflow:hidden}
+.drawing-note{font-size:12px;color:var(--g400);font-style:italic;margin-top:8px;text-align:center}
+.done-banner{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;color:#166534;margin-top:16px;display:none}
+.done-banner.on{display:block}
+
+/* Step 4 */
+.sum-wrap{max-width:900px;margin:0 auto;padding:48px 24px 80px}
+.sum-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:#dcfce7;color:#166534;border-radius:20px;font-size:14px;font-weight:700;margin-bottom:20px}
+.sum-h{font-size:32px;font-weight:800;color:var(--g900);margin-bottom:6px}
+.sum-sub{font-size:16px;color:var(--g600);margin-bottom:40px}
+.sum-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px}
+.ss{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--shadow)}
+.ss-val{font-size:32px;font-weight:800;color:var(--g900);margin-bottom:4px}
+.ss-lbl{font-size:13px;color:var(--g600)}
+.donut-row{display:flex;align-items:center;gap:40px;margin-bottom:40px}
+.donut-legend{flex:1}
+.dl-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dl-label{font-size:14px;color:var(--g600);flex:1}
+.dl-count{font-size:16px;font-weight:700;color:var(--g900)}
+.rev-tbl{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px}
+.rev-tbl th{padding:10px 14px;background:var(--g50);color:var(--g400);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:2px solid var(--g200)}
+.rev-tbl td{padding:12px 14px;border-bottom:1px solid var(--g100);color:var(--g700)}
+.rev-tbl tr:hover td{background:var(--g50)}
+.schip{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.schip.sa{background:#dcfce7;color:#166534}
+.schip.sc{background:#eff6ff;color:#1d4ed8}
+.schip.sf{background:#fef2f2;color:var(--red)}
+.exp-box{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:32px;text-align:center}
+.exp-h{font-size:20px;font-weight:700;color:var(--g900);margin-bottom:8px}
+.exp-desc{font-size:15px;color:var(--g600);margin-bottom:24px}
+.exp-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.exp-note{font-size:13px;color:var(--g400);margin-top:14px}
+
+/* Tooltip */
+#tip{position:fixed;z-index:9999;background:var(--g900);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.4;max-width:240px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:0;transition:opacity .15s ease;white-space:normal}
+#tip.on{opacity:1}
+.ii{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--g200);color:var(--g600);font-size:10px;font-weight:700;cursor:help;vertical-align:middle;margin-left:3px;flex-shrink:0;line-height:1}
+
+/* Tour overlay */
+#tour{display:none;position:fixed;inset:0;z-index:8000}
+#tour.on{display:block}
+#tour-back{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+#tour-spot{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.45);pointer-events:none;transition:all .3s ease;z-index:1}
+#tour-tip{position:absolute;background:var(--g900);color:#fff;border-radius:12px;padding:20px 22px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.3);z-index:2}
+#tour-tip h4{font-size:15px;font-weight:700;margin-bottom:8px}
+#tour-tip p{font-size:14px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:16px}
+.tour-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tour-prog{font-size:12px;color:rgba(255,255,255,.3)}
+.tour-next{padding:7px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:var(--t)}
+.tour-next:hover{background:#1d4ed8}
+.tour-skip{font-size:13px;color:rgba(255,255,255,.35);cursor:pointer}
+.tour-skip:hover{color:rgba(255,255,255,.7)}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--g900);color:#fff;border-radius:10px;padding:14px 20px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:transform .3s ease,opacity .3s ease}
+#toast.on{transform:translateY(0);opacity:1}
+.t-icon{width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+
+/* Responsive */
+@media(max-width:1023px){
+  .container{padding:0 20px}
+  .section{padding:60px 0}
+  .hero-h1{font-size:38px}
+  .metrics-grid,.rollout-grid{grid-template-columns:1fr;gap:16px}
+  .wf-grid{grid-template-columns:1fr}
+  .dv-split{grid-template-columns:1fr}
+  .pipeline{flex-direction:column}
+  .pl-arrow{transform:rotate(90deg);padding:8px 0}
+  .hero-stats{grid-template-columns:1fr}
+  .jtbd-grid{grid-template-columns:1fr}
+  .persona-stats{grid-template-columns:1fr}
+  .sum-stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:767px){
+  .hero-h1{font-size:28px}
+  .section{padding:48px 0}
+  .section-title{font-size:28px}
+  .section-body{font-size:16px}
+  .nav-pills{display:none}
+  .journey{flex-direction:column;min-width:unset}
+  .j-conn{transform:rotate(90deg);padding:4px 0}
+  .items-grid{grid-template-columns:1fr}
+  .donut-row{flex-direction:column}
+  .sum-stats{grid-template-columns:repeat(2,1fr)}
+  .hero-btns{flex-direction:column;align-items:flex-start}
+}
+</style>
 </head>
+<body>
 
-<body class="bg-[#F9FAFB] text-[#0F172A]">
+<!-- ── NAV ── -->
+<nav id="main-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-inner">
+    <button class="nav-brand" onclick="showView('cs')" aria-label="Beam AI home">Beam AI</button>
+    <span class="nav-sep">·</span>
 
-<!-- ════════════════════════════════════════
-     STICKY NAV
-════════════════════════════════════════ -->
-<nav class="sticky top-0 z-50 bg-[#0F172A] border-b border-white/10 shadow-sm">
-  <div class="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <!-- Beam AI wordmark -->
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg bg-[#2563EB] flex items-center justify-center">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L7 2L12 7L7 12L2 7Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
-        </div>
-        <span class="text-white font-bold text-sm tracking-tight">Beam AI</span>
-      </div>
-      <span class="text-white/30 text-sm">·</span>
-      <span class="text-white/70 text-sm font-medium">Quick Review Workflow</span>
-      <span class="hidden sm:inline text-white/30 text-sm">·</span>
-      <span class="hidden sm:inline text-white/50 text-xs">PM Case Study</span>
+    <!-- Case study pills -->
+    <div class="nav-pills" id="cs-pills" role="tablist">
+      <button class="nav-pill active" data-section="s1" onclick="scrollTo('s1')" role="tab">Problem</button>
+      <button class="nav-pill" data-section="s2" onclick="scrollTo('s2')" role="tab">Metrics</button>
+      <button class="nav-pill" data-section="s3" onclick="scrollTo('s3')" role="tab">Solution</button>
+      <button class="nav-pill" data-section="s4" onclick="scrollTo('s4')" role="tab">Wireframes</button>
+      <button class="nav-pill" data-section="s5" onclick="scrollTo('s5')" role="tab">Rollout</button>
     </div>
-    <a href="https://linkedin.com/in/namangautam08" target="_blank"
-       class="flex items-center gap-2 text-white/60 hover:text-white text-xs font-medium transition-colors">
-      <span class="hidden sm:inline">By</span>
-      <span class="text-white/90 font-semibold">Naman Gautam</span>
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="text-white/40">
-        <path d="M2 10L10 2M10 2H4M10 2V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </a>
+
+    <!-- Prototype nav -->
+    <div class="proto-nav" id="proto-pills">
+      <button class="proto-back" onclick="showView('cs')" aria-label="Back to case study">← Case Study</button>
+      <span class="nav-sep">|</span>
+      <div class="proto-steps" id="step-crumbs" role="tablist">
+        <button class="proto-step active" id="sc1" onclick="jumpStep(1)" role="tab">Step 1</button>
+        <span class="proto-step-dot">·</span>
+        <button class="proto-step locked" id="sc2" onclick="jumpStep(2)" role="tab">Step 2</button>
+        <span class="proto-step-dot">·</span>
+        <button class="proto-step locked" id="sc3" onclick="jumpStep(3)" role="tab">Step 3</button>
+        <span class="proto-step-dot">·</span>
+        <button class="proto-step locked" id="sc4" onclick="jumpStep(4)" role="tab">Step 4</button>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-cta" id="nav-cta" onclick="showView('proto')">Explore Prototype →</button>
+    </div>
   </div>
 </nav>
 
+<!-- ════════════════════ CASE STUDY VIEW ════════════════════ -->
+<div id="cs-view">
 
-<!-- ════════════════════════════════════════
-     SECTION 1: FRAME THE PROBLEM
-════════════════════════════════════════ -->
-<section id="problem" class="py-16 sm:py-20 border-b border-gray-200">
-  <div class="max-w-6xl mx-auto px-5">
-
-    <div class="section-tag">Section 1 — Frame the Problem</div>
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-2 leading-tight">
-      The review step that costs $40,000
-    </h1>
-    <p class="text-[#6B7280] text-base max-w-2xl mb-12 leading-relaxed">
-      Beam AI automates HVAC takeoffs. But automation without review confidence isn't automation — it's just faster risk. Here's the problem through the estimator's eyes.
-    </p>
-
-    <!-- Persona card -->
-    <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 mb-10 max-w-xl shadow-sm">
-      <div class="flex items-center gap-4 mb-5">
-        <div class="w-12 h-12 rounded-full bg-[#EFF6FF] border-2 border-[#BFDBFE] flex items-center justify-center">
-          <span class="text-[#2563EB] font-bold text-lg">M</span>
-        </div>
-        <div>
-          <div class="font-bold text-[#0F172A] text-base">Marcus Chen</div>
-          <div class="text-[#6B7280] text-sm">Senior Estimator · 12 years HVAC</div>
-          <div class="text-[#6B7280] text-xs mt-0.5">Commercial projects $500K–$5M</div>
-        </div>
-      </div>
-      <div class="grid grid-cols-3 gap-3 pt-4 border-t border-[#F3F4F6]">
-        <div class="text-center">
-          <div class="text-[#2563EB] font-bold text-lg">400–600</div>
-          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">annotations<br/>per drawing</div>
-        </div>
-        <div class="text-center border-x border-[#F3F4F6]">
-          <div class="text-[#EF4444] font-bold text-lg">90 min</div>
-          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">current review<br/>time avg.</div>
-        </div>
-        <div class="text-center">
-          <div class="text-[#EF4444] font-bold text-lg">$40K+</div>
-          <div class="text-[#6B7280] text-[11px] leading-tight mt-0.5">cost of missed<br/>AHU miscount</div>
-        </div>
-      </div>
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-tag">🏗️ PM Case Study · Beam AI · 2026</div>
+    <h1 class="hero-h1">Quick Review Workflow</h1>
+    <p class="hero-sub">How a confidence-first review queue helps HVAC estimators trust AI takeoffs and cut review time from 90 minutes to under 25.</p>
+    <div class="hero-btns">
+      <button class="btn btn-navy" onclick="showView('proto')">Explore Prototype →</button>
+      <button class="btn btn-outline" onclick="document.getElementById('s1').scrollIntoView({behavior:'smooth'})">Read Product Thinking ↓</button>
     </div>
-
-    <!-- JTBD blocks -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 max-w-4xl">
-      <div class="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5">
-        <div class="text-[#1D4ED8] text-xs font-bold uppercase tracking-widest mb-3">Job to be Done — Efficiency</div>
-        <p class="text-[#1E3A8A] text-sm leading-relaxed">
-          "When reviewing AI takeoffs on large drawings, I need to know which items are most likely wrong so I can verify those first and skip the ones the AI probably got right."
-        </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">400–600</div>
+        <div class="hero-stat-label">annotations per drawing <span class="ii" data-tip="src-annot">i</span></div>
       </div>
-      <div class="bg-[#F0FDF4] border border-[#86EFAC] rounded-xl p-5">
-        <div class="text-[#166534] text-xs font-bold uppercase tracking-widest mb-3">Job to be Done — Confidence</div>
-        <p class="text-[#14532D] text-sm leading-relaxed">
-          "When I'm done reviewing, I need to feel confident enough to export — not wonder if I missed something that could blow the bid."
-        </p>
+      <div class="hero-stat">
+        <div class="hero-stat-val">60–90 min</div>
+        <div class="hero-stat-label">average review time <span class="ii" data-tip="src-time">i</span></div>
       </div>
-    </div>
-
-    <!-- Current journey -->
-    <div>
-      <div class="text-[#6B7280] text-xs font-bold uppercase tracking-widest mb-5">Current Journey — Without Quick Review</div>
-      <div class="flex flex-col md:flex-row items-start gap-1 md:gap-0">
-
-        <!-- Step 1 -->
-        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
-          <div class="flex flex-col md:items-center md:w-full">
-            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
-              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">01</div>
-              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Receive AI<br class="hidden md:block"/> takeoff output</div>
-            </div>
-            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
-              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
-                <span class="text-[#EF4444] text-xs">⚠</span>
-                <span class="text-[#EF4444] text-xs leading-tight">"No signal on which items are uncertain"</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Arrow -->
-        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
-        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
-
-        <!-- Step 2 -->
-        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
-          <div class="flex flex-col md:items-center md:w-full">
-            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
-              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">02</div>
-              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Open drawing +<br class="hidden md:block"/> spreadsheet</div>
-            </div>
-            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
-              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
-                <span class="text-[#EF4444] text-xs">⚠</span>
-                <span class="text-[#EF4444] text-xs leading-tight">"Context switching breaks focus"</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
-        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
-
-        <!-- Step 3 -->
-        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
-          <div class="flex flex-col md:items-center md:w-full">
-            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
-              <div class="w-8 h-8 rounded-full bg-[#EF4444] text-white text-xs font-bold flex items-center justify-center shrink-0">03</div>
-              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Scroll 400+<br class="hidden md:block"/> annotations</div>
-            </div>
-            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
-              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
-                <span class="text-[#EF4444] text-xs">⚠</span>
-                <span class="text-[#EF4444] text-xs leading-tight">"Everything looks equally urgent"</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
-        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
-
-        <!-- Step 4 -->
-        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
-          <div class="flex flex-col md:items-center md:w-full">
-            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
-              <div class="w-8 h-8 rounded-full bg-[#EF4444] text-white text-xs font-bold flex items-center justify-center shrink-0">04</div>
-              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Manual cross-check<br class="hidden md:block"/> suspicious items</div>
-            </div>
-            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
-              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
-                <span class="text-[#EF4444] text-xs">⚠</span>
-                <span class="text-[#EF4444] text-xs leading-tight">"No way to track what's been checked"</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="journey-arrow self-center mx-2 hidden md:block">→</div>
-        <div class="journey-arrow md:hidden ml-11 my-0.5 rotate-90">↓</div>
-
-        <!-- Step 5 -->
-        <div class="flex md:flex-col items-start md:items-center gap-3 md:gap-0 flex-1">
-          <div class="flex flex-col md:items-center md:w-full">
-            <div class="flex items-center gap-2 md:flex-col md:gap-1 md:text-center w-full md:w-auto">
-              <div class="w-8 h-8 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center shrink-0">05</div>
-              <div class="font-semibold text-[#0F172A] text-sm md:mt-2 md:text-center">Export BoQ</div>
-            </div>
-            <div class="mt-2 md:mt-3 ml-11 md:ml-0 md:text-center">
-              <div class="inline-flex items-start gap-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-2 py-1.5">
-                <span class="text-[#EF4444] text-xs">⚠</span>
-                <span class="text-[#EF4444] text-xs leading-tight">"Never sure if it's actually complete"</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- end journey -->
-    </div>
-
-  </div>
-</section>
-
-
-<!-- ════════════════════════════════════════
-     SECTION 2: SUCCESS METRICS
-════════════════════════════════════════ -->
-<section id="metrics" class="py-16 sm:py-20 bg-white border-b border-gray-200">
-  <div class="max-w-6xl mx-auto px-5">
-
-    <div class="section-tag">Section 2 — Success Metrics</div>
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">How we know it's working</h2>
-    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Three metrics. Each tied to a behavior we want to change, an instrumentation method, and a target we'd validate in beta before committing to at scale.</p>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-      <!-- Metric 1 -->
-      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2563EB" stroke-width="1.5"/><path d="M8 5v3.5l2 2" stroke="#2563EB" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <span class="text-[#0F172A] font-bold text-sm">Review Completion Time</span>
-        </div>
-        <div class="mb-4">
-          <div class="text-3xl font-extrabold text-[#2563EB] mb-1">&lt;25 min</div>
-          <div class="text-[#6B7280] text-xs">per 40-sheet drawing</div>
-          <div class="mt-1.5 flex items-center gap-2">
-            <div class="text-[#9CA3AF] text-xs line-through">90 min today</div>
-            <div class="text-[#22C55E] text-xs font-semibold">73% reduction</div>
-          </div>
-        </div>
-        <div class="space-y-3 flex-1">
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed">Faster review = more bids per estimator per week. At 3 extra reviews/week per estimator, that's direct revenue multiplier for the Beam customer.</div>
-          </div>
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Timestamp: "Start Review" → "Export" click, per drawing session. Track p50 and p90 separately.</div>
-          </div>
-        </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">$40K+</div>
+        <div class="hero-stat-label">cost of a missed AHU <span class="ii" data-tip="src-ahu">i</span></div>
       </div>
-
-      <!-- Metric 2 -->
-      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-8 h-8 rounded-lg bg-[#F0FDF4] flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 5" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <span class="text-[#0F172A] font-bold text-sm">AI Acceptance Rate</span>
-        </div>
-        <div class="mb-4">
-          <div class="text-3xl font-extrabold text-[#22C55E] mb-1">&gt;82%</div>
-          <div class="text-[#6B7280] text-xs">of annotations accepted without correction</div>
-          <div class="mt-1.5 text-[#F59E0B] text-xs font-medium">Proxy for review quality</div>
-        </div>
-        <div class="space-y-3 flex-1">
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed">If estimators correct &gt;18%, either AI quality is low or the UX is causing over-correction. This metric surfaces which — it's a diagnostic as much as a target.</div>
-          </div>
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Log every annotation action: Accept / Correct / Flag — with annotation type and AI confidence score. Report per session.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Metric 3 -->
-      <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-sm flex flex-col">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-8 h-8 rounded-lg bg-[#FFF7ED] flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="#F59E0B" stroke-width="1.5"/><path d="M5 7h6M5 10h4" stroke="#F59E0B" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </div>
-          <span class="text-[#0F172A] font-bold text-sm">Post-Export Error Rate</span>
-        </div>
-        <div class="mb-4">
-          <div class="text-3xl font-extrabold text-[#F59E0B] mb-1">&lt;1.5%</div>
-          <div class="text-[#6B7280] text-xs">quantity discrepancy vs. field count</div>
-          <div class="mt-1.5 text-[#2563EB] text-xs font-medium">The ultimate test</div>
-        </div>
-        <div class="space-y-3 flex-1">
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">Why it matters</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed">The final measure — did the review actually catch what mattered? Fast review means nothing if the BoQ is still wrong on site.</div>
-          </div>
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">How to instrument</div>
-            <div class="text-[#6B7280] text-xs leading-relaxed font-mono">Compare exported BoQ quantities to field verification reports. Sampled monthly. Requires Beam customer ops team coordination.</div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
 
+<!-- S1 PROBLEM -->
+<section id="s1" class="section" style="background:var(--g50)">
+  <div class="container">
+    <span class="section-label">Frame the Problem</span>
+    <h2 class="section-title">Why estimators don't trust AI takeoffs</h2>
+    <p class="section-body">Beam AI surfaces hundreds of annotations per drawing. Without confidence signals, estimators review everything equally — or skip items they shouldn't.</p>
 
-<!-- ════════════════════════════════════════
-     SECTION 3: SOLUTION CONCEPT
-════════════════════════════════════════ -->
-<section id="solution" class="py-16 sm:py-20 border-b border-gray-200">
-  <div class="max-w-6xl mx-auto px-5">
-
-    <div class="section-tag">Section 3 — Solution Concept</div>
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">A three-layer review system</h2>
-    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">The insight: not all 400 annotations deserve equal attention. The solution isn't a faster way to check everything — it's a smarter way to know what to skip.</p>
-
-    <!-- Pipeline diagram -->
-    <div class="flex flex-col md:flex-row items-stretch gap-3 md:gap-0 mb-10">
-
-      <!-- Layer 1 -->
-      <div class="flex-1 bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl md:rounded-r-none md:border-r-0 p-6">
-        <div class="text-[#1D4ED8] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 1</div>
-        <div class="text-[#1E3A8A] font-bold text-base mb-3">Confidence Engine</div>
-        <div class="text-[#3B82F6] text-xs leading-relaxed mb-4">
-          AI scores every annotation 0–100 on detection confidence.
-        </div>
-        <div class="space-y-1.5">
-          <div class="text-[#1D4ED8] text-xs font-medium">Inputs:</div>
-          <div class="flex flex-wrap gap-1.5">
-            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Symbol clarity</span>
-            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Overlap detection</span>
-            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Drawing scale</span>
-            <span class="bg-white/70 border border-[#93C5FD] text-[#1D4ED8] text-[10px] font-medium px-2 py-0.5 rounded-full">Historical accuracy</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Arrow 1→2 -->
-      <div class="pipe-arrow flex items-center justify-center px-2 py-3 md:py-0 md:mt-0">
-        <span class="hidden md:block">→</span>
-        <span class="md:hidden">↓</span>
-      </div>
-
-      <!-- Layer 2 -->
-      <div class="flex-1 bg-white border border-[#E5E7EB] rounded-2xl md:rounded-none md:border-x-0 p-6 shadow-sm">
-        <div class="text-[#6B7280] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 2</div>
-        <div class="text-[#0F172A] font-bold text-base mb-3">Risk Prioritizer</div>
-        <div class="text-[#6B7280] text-xs leading-relaxed mb-4">
-          Combines confidence + dollar value + annotation rarity. Outputs a ranked review queue.
-        </div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
-            <span class="text-[#374151] text-xs">AHU-03 · 61% conf.</span>
-            <span class="bg-[#FEE2E2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">HIGH RISK</span>
-          </div>
-          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
-            <span class="text-[#374151] text-xs">VAV-12 · 74% conf.</span>
-            <span class="bg-[#FEE2E2] text-[#EF4444] text-[10px] font-bold px-2 py-0.5 rounded-full">HIGH RISK</span>
-          </div>
-          <div class="flex items-center justify-between bg-[#F9FAFB] rounded-lg px-3 py-2">
-            <span class="text-[#374151] text-xs">SD-44 · 83% conf.</span>
-            <span class="bg-[#FEF3C7] text-[#D97706] text-[10px] font-bold px-2 py-0.5 rounded-full">MEDIUM</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Arrow 2→3 -->
-      <div class="pipe-arrow flex items-center justify-center px-2 py-3 md:py-0">
-        <span class="hidden md:block">→</span>
-        <span class="md:hidden">↓</span>
-      </div>
-
-      <!-- Layer 3 -->
-      <div class="flex-1 bg-[#F0FDF4] border border-[#86EFAC] rounded-2xl md:rounded-l-none md:border-l-0 p-6">
-        <div class="text-[#166534] text-[10px] font-bold uppercase tracking-widest mb-3">Layer 3</div>
-        <div class="text-[#14532D] font-bold text-base mb-3">Quick Review UX</div>
-        <div class="text-[#16A34A] text-xs leading-relaxed mb-4">
-          Sorted annotation queue. Keyboard-first. Progress tracking. Export gated on review complete.
-        </div>
-        <div class="space-y-1.5">
-          <div class="flex items-center gap-2">
-            <kbd>A</kbd><span class="text-[#166534] text-xs">Accept</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <kbd>C</kbd><span class="text-[#166534] text-xs">Correct</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <kbd>F</kbd><span class="text-[#166534] text-xs">Flag for team</span>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- end pipeline -->
-
-    <!-- Assumptions -->
-    <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 mb-6 shadow-sm">
-      <div class="text-[#0F172A] font-bold text-sm mb-4">Key assumptions — stated explicitly</div>
-      <div class="space-y-3">
-        <div class="flex gap-3">
-          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
-            <span class="text-[#6B7280] text-[10px] font-bold">1</span>
-          </div>
-          <p class="text-[#374151] text-sm leading-relaxed">
-            <span class="font-semibold">Confidence scores already exist.</span> Beam AI's model produces a per-annotation confidence score internally. Quick Review surfaces this — it does not require training a new model. This is a UI change, not an ML change.
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
-            <span class="text-[#6B7280] text-[10px] font-bold">2</span>
-          </div>
-          <p class="text-[#374151] text-sm leading-relaxed">
-            <span class="font-semibold">Dollar values are seeded, not custom.</span> Item values come from a standard HVAC price reference (RSMeans or equivalent) seeded into the platform. Estimators can override per project. No custom pricing engine required for v1.
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <div class="w-5 h-5 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center shrink-0 mt-0.5">
-            <span class="text-[#6B7280] text-[10px] font-bold">3</span>
-          </div>
-          <p class="text-[#374151] text-sm leading-relaxed">
-            <span class="font-semibold">"Review complete" is not 100%.</span> It means all High-Risk items reviewed plus overall review exceeding 60% complete. This is a deliberate design choice — perfect coverage is the enemy of shipping bids.
-          </p>
+    <div class="persona-card" id="tour-persona">
+      <div class="persona-avatar" aria-hidden="true">MC</div>
+      <div style="flex:1">
+        <div class="persona-name">Marcus Chen — Senior Estimator</div>
+        <div class="persona-title">12 years HVAC · Commercial projects $500K–$5M · Responsible for takeoff accuracy and BoQ sign-off</div>
+        <div class="persona-stats">
+          <div class="ps-cell"><div class="ps-val">400–600</div><div class="ps-label">annotations / drawing</div></div>
+          <div class="ps-cell"><div class="ps-val">90 min<span class="ii" data-tip="src-time">i</span></div><div class="ps-label">avg review time</div></div>
+          <div class="ps-cell"><div class="ps-val">$40K+<span class="ii" data-tip="src-ahu">i</span></div><div class="ps-label">cost of missed AHU</div></div>
         </div>
       </div>
     </div>
 
-    <!-- Trade-off callout -->
-    <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-xl p-5">
-      <div class="flex gap-3">
-        <div class="text-[#F59E0B] text-lg mt-0.5 shrink-0">⚖</div>
-        <div>
-          <div class="text-[#92400E] font-bold text-sm mb-2">Key trade-off: false positives are acceptable</div>
-          <p class="text-[#78350F] text-sm leading-relaxed">
-            The prioritization model will sometimes surface false positives — items the AI was uncertain about that turn out to be correct. This is acceptable. The cost of an unnecessary check is 10 seconds. The cost of a missed misidentified AHU is $40,000. We bias toward over-flagging, not under-flagging.
-          </p>
-        </div>
+    <div class="jtbd-grid">
+      <div class="jtbd eff">
+        <div class="jtbd-lbl">JTBD — Efficiency</div>
+        <div class="jtbd-q">"Identify which items are most likely wrong so I can verify those first."</div>
+      </div>
+      <div class="jtbd conf">
+        <div class="jtbd-lbl">JTBD — Confidence</div>
+        <div class="jtbd-q">"Feel confident enough to export without wondering if I missed something."</div>
       </div>
     </div>
 
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:20px">Day in the Life — Without Quick Review</div>
+    <div class="journey-wrap">
+      <div class="journey" role="list">
+        <div class="j-step" role="listitem">
+          <div class="j-dot ok">1</div>
+          <div class="j-time">07:15</div>
+          <div class="j-event">Opens Beam AI output</div>
+          <div class="j-detail">452 annotations. No signal on which need attention. Starts from #1.</div>
+        </div>
+        <div class="j-conn" aria-hidden="true">→</div>
+        <div class="j-step" role="listitem">
+          <div class="j-dot ok">2</div>
+          <div class="j-time">08:30</div>
+          <div class="j-event">Spots AHU discrepancy</div>
+          <div class="j-detail">AHU-03 looks off. Switches to equipment schedule. Loses drawing context.</div>
+        </div>
+        <div class="j-conn" aria-hidden="true">→</div>
+        <div class="j-step" role="listitem">
+          <div class="j-dot ok">3</div>
+          <div class="j-time">09:45</div>
+          <div class="j-event">Revisits checked items</div>
+          <div class="j-detail">No review tracking. Starts re-checking floor 4 from scratch.</div>
+        </div>
+        <div class="j-conn" aria-hidden="true">→</div>
+        <div class="j-step" role="listitem">
+          <div class="j-dot ok">4</div>
+          <div class="j-time">11:00</div>
+          <div class="j-event">Manual export attempt</div>
+          <div class="j-detail">Exports with uncertainty. Sends BoQ with a caveat email.</div>
+        </div>
+        <div class="j-conn" aria-hidden="true">→</div>
+        <div class="j-step" role="listitem">
+          <div class="j-dot bad">5</div>
+          <div class="j-time">13:45</div>
+          <div class="j-event">Rework request</div>
+          <div class="j-detail">Field team flags AHU double-count. $38,400 correction. Credibility hit.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
+<!-- S2 METRICS -->
+<section id="s2" class="section" style="background:#fff">
+  <div class="container">
+    <span class="section-label">Success Metrics</span>
+    <h2 class="section-title">How we'll know it's working</h2>
+    <p class="section-body">Three measurable outcomes with clear targets, instrumentation plans, and honest baselines — including where data doesn't exist yet.</p>
+    <div class="metrics-grid">
+      <div class="mc blue">
+        <div class="mc-lbl">Review Completion Time</div>
+        <div class="mc-target">&lt;25 min</div>
+        <div class="mc-note">Per 40-sheet drawing · Baseline: 90 min <span class="ii" data-tip="src-time">i</span></div>
+        <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Session duration from first annotation opened → export click. Server-side per session.</div>
+      </div>
+      <div class="mc green">
+        <div class="mc-lbl">AI Acceptance Rate</div>
+        <div class="mc-target">&gt;82%</div>
+        <div class="mc-note">Without correction · No baseline yet</div>
+        <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Accept actions ÷ total actioned items per session. Broken down by item type and floor.</div>
+      </div>
+      <div class="mc amber">
+        <div class="mc-lbl">Post-Export Error Rate</div>
+        <div class="mc-target">&lt;1.5%</div>
+        <div class="mc-note">Quantity discrepancy · Baseline assumed <span class="ii" data-tip="src-err">i</span></div>
+        <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Flagged field corrections ÷ total items exported. Requires field verification integration (v2).</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<!-- ════════════════════════════════════════
-     SECTION 4: UX FLOW & WIREFRAMES
-════════════════════════════════════════ -->
-<section id="wireframes" class="py-16 sm:py-20 bg-white border-b border-gray-200">
-  <div class="max-w-6xl mx-auto px-5">
+<!-- S3 SOLUTION -->
+<section id="s3" class="section" style="background:var(--g50)">
+  <div class="container">
+    <span class="section-label">Solution Architecture</span>
+    <h2 class="section-title">Three-layer architecture</h2>
+    <p class="section-body">Each layer builds on the last. The key constraint: no new ML models. Everything surfaces what Beam already computes.</p>
+    <div class="pipeline">
+      <div class="pl-step">
+        <div class="pl-card blue">
+          <div class="pl-icon">🎯</div>
+          <div class="pl-name">Confidence Engine</div>
+          <div class="pl-desc">Scores each annotation 0–100 based on symbol clarity, bounding box overlap, drawing scale consistency, and historical accuracy for that item type.</div>
+        </div>
+      </div>
+      <div class="pl-arrow" aria-hidden="true">→</div>
+      <div class="pl-step">
+        <div class="pl-card amber">
+          <div class="pl-icon">⚡</div>
+          <div class="pl-name">Risk Prioritizer</div>
+          <div class="pl-desc">Combines confidence score, estimated dollar value, and item rarity into a ranked queue. Low confidence + high value = top of queue.</div>
+        </div>
+      </div>
+      <div class="pl-arrow" aria-hidden="true">→</div>
+      <div class="pl-step">
+        <div class="pl-card green">
+          <div class="pl-icon">✓</div>
+          <div class="pl-name">Quick Review UX</div>
+          <div class="pl-desc">Keyboard-first interface surfaces drawing context inline. Progress bar and export gating prevent premature BoQ submission.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tradeoff">
+      <div class="tradeoff-lbl">Key Trade-off</div>
+      <p><strong>False positives are acceptable.</strong> Cost of an unnecessary check: ~10 seconds. Cost of a missed AHU miscount: $40,000+. The system deliberately biases toward over-flagging.</p>
+    </div>
+    <div class="assumptions">
+      <h4>Assumptions — stated explicitly</h4>
+      <ol>
+        <li>Confidence scores already exist in Beam's ML pipeline. This is a UI surface change, not a new model.</li>
+        <li>Dollar values come from RSMeans 2024 HVAC reference data, not live quote feeds.</li>
+        <li>"Review complete" ≠ 100% coverage. Threshold: all High-Risk items cleared + 60% overall.</li>
+      </ol>
+    </div>
+  </div>
+</section>
 
-    <div class="section-tag">Section 4 — UX Flow &amp; Wireframes</div>
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">What the estimator actually sees</h2>
-    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Two views — the prioritized queue on the left, the drawing-context detail on the right. An estimator cycles between them via keyboard without ever losing their place.</p>
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-
-      <!-- ── WIREFRAME 1: Prioritization View ── -->
+<!-- S4 WIREFRAMES -->
+<section id="s4" class="section" style="background:#fff">
+  <div class="container">
+    <span class="section-label">UX Flow &amp; Wireframes</span>
+    <h2 class="section-title">Two views, one workflow</h2>
+    <p class="section-body">The queue surfaces risk. The detail view surfaces context. Together they eliminate the need to switch tools.</p>
+    <div class="wf-grid">
+      <!-- Queue wireframe -->
       <div>
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-6 h-6 rounded-full bg-[#0F172A] flex items-center justify-center">
-            <span class="text-white text-[10px] font-bold">1</span>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--g400);letter-spacing:.06em;margin-bottom:10px">Wireframe 1 — Review Queue</div>
+        <div class="wf-outer">
+          <div class="wf-chrome">
+            <div class="wf-dot" style="background:#ef4444"></div>
+            <div class="wf-dot" style="background:#f59e0b"></div>
+            <div class="wf-dot" style="background:#22c55e"></div>
+            <div class="wf-url"><span>beam.ai / review / drawing-40B</span></div>
           </div>
-          <span class="text-[#0F172A] font-bold text-sm">Prioritization View — Review Queue</span>
-        </div>
-
-        <!-- Wireframe container -->
-        <div class="wf-outer p-0 overflow-hidden">
-
-          <!-- WF Header bar -->
-          <div class="bg-[#E5E7EB] border-b border-[#D1D5DB] px-4 py-2.5 flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-            <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-            <span class="wf-label ml-2">beam.ai / review / drawing-40B</span>
-          </div>
-
-          <div class="p-4">
-            <!-- Queue header -->
-            <div class="mb-3">
-              <div class="flex items-center justify-between mb-2">
-                <div class="text-[#0F172A] font-bold text-sm">Review Queue</div>
-                <div class="text-[#6B7280] text-xs">41 of 452 reviewed</div>
-              </div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-[#EF4444] text-xs font-semibold">24 High-Risk</span>
-                <span class="text-[#9CA3AF] text-xs">·</span>
-                <span class="text-[#F59E0B] text-xs font-semibold">87 Medium</span>
-                <span class="text-[#9CA3AF] text-xs">·</span>
-                <span class="text-[#6B7280] text-xs">341 Low</span>
-              </div>
-              <!-- Progress bar -->
-              <div class="progress-bar-outer">
-                <div class="progress-bar-inner" style="width: 9%;"></div>
-              </div>
-              <div class="text-[10px] text-[#6B7280] mt-1">9% complete — 24 high-risk items remaining</div>
+          <div class="wf-body">
+            <div class="wf-hdr">Drawing 40-B · Floor Plans · 452 annotations</div>
+            <div class="wf-prog"><div class="wf-prog-fill" style="width:9%"></div></div>
+            <div style="font-size:11px;color:var(--g400);margin-bottom:10px">41 of 452 reviewed · 9% · 24 high-risk remaining</div>
+            <div class="wf-tabs">
+              <div class="wf-tab off">All</div><div class="wf-tab on">High Risk (24)</div><div class="wf-tab off">Medium (87)</div><div class="wf-tab off">Flagged (0)</div>
             </div>
-
-            <!-- Filter tabs -->
-            <div class="flex gap-1 mb-4 bg-[#E5E7EB] rounded-lg p-0.5">
-              <button class="flex-1 bg-white rounded-md text-xs font-semibold text-[#0F172A] py-1.5 shadow-sm">All</button>
-              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">
-                <span class="text-[#EF4444]">●</span> High Risk
-              </button>
-              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">Flagged</button>
-              <button class="flex-1 rounded-md text-xs font-medium text-[#6B7280] py-1.5">Unreviewed</button>
+            <div class="wf-item h">
+              <div class="wf-irow"><div><div class="wf-iname">AHU-03 · Air Handling Unit</div><div class="wf-isub">Floor 4</div></div><div class="wf-ival">$38,400</div></div>
+              <div class="wf-conf"><div class="wf-conf-fill" style="width:61%;background:var(--red)"></div></div>
+              <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 61% · HIGH RISK</div>
+              <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div><div class="wf-act wf-act-f">⚑ Flag</div></div>
             </div>
-
-            <!-- Annotation cards -->
-            <div class="space-y-2.5">
-
-              <!-- Card 1: HIGH RISK -->
-              <div class="bg-white border border-[#E5E7EB] risk-high rounded-lg p-3.5 cursor-pointer hover:shadow-sm transition-shadow">
-                <div class="flex items-start justify-between mb-2">
-                  <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                      <span class="bg-[#FEE2E2] text-[#EF4444] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">HIGH RISK</span>
-                      <span class="text-[#0F172A] font-semibold text-xs">AHU-03</span>
-                    </div>
-                    <div class="text-[#374151] text-xs">Air Handling Unit · Floor 4</div>
-                  </div>
-                  <div class="text-right shrink-0 ml-2">
-                    <div class="text-[#EF4444] font-bold text-sm">$38,400</div>
-                    <div class="wf-label">est. value</div>
-                  </div>
-                </div>
-                <!-- Confidence bar -->
-                <div class="mb-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="wf-label">AI confidence</span>
-                    <span class="text-[#EF4444] text-xs font-bold">61%</span>
-                  </div>
-                  <div class="conf-bar">
-                    <div class="conf-fill-red" style="width: 61%;"></div>
-                  </div>
-                </div>
-                <div class="bg-[#FEF2F2] border border-[#FECACA] rounded-md px-2.5 py-1.5 mb-2.5">
-                  <span class="text-[#EF4444] text-[10px]">⚠</span>
-                  <span class="text-[#DC2626] text-[10px] ml-1">"Overlapping ductwork annotation — possible double-count"</span>
-                </div>
-                <div class="flex gap-1.5">
-                  <button class="btn-accept">✓ Accept</button>
-                  <button class="btn-correct">✏ Correct</button>
-                  <button class="btn-flag">⚑ Flag</button>
-                </div>
-              </div>
-
-              <!-- Card 2: HIGH RISK -->
-              <div class="bg-white border border-[#E5E7EB] risk-high rounded-lg p-3.5">
-                <div class="flex items-start justify-between mb-2">
-                  <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                      <span class="bg-[#FEE2E2] text-[#EF4444] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">HIGH RISK</span>
-                      <span class="text-[#0F172A] font-semibold text-xs">VAV-12</span>
-                    </div>
-                    <div class="text-[#374151] text-xs">Variable Air Volume Box · Floor 3, Zone B</div>
-                  </div>
-                  <div class="text-right shrink-0 ml-2">
-                    <div class="text-[#0F172A] font-bold text-sm">$2,100</div>
-                    <div class="wf-label">est. value</div>
-                  </div>
-                </div>
-                <div class="mb-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="wf-label">AI confidence</span>
-                    <span class="text-[#EF4444] text-xs font-bold">74%</span>
-                  </div>
-                  <div class="conf-bar">
-                    <div class="conf-fill-red" style="width: 74%;"></div>
-                  </div>
-                </div>
-                <div class="bg-[#FEF2F2] border border-[#FECACA] rounded-md px-2.5 py-1.5 mb-2.5">
-                  <span class="text-[#EF4444] text-[10px]">⚠</span>
-                  <span class="text-[#DC2626] text-[10px] ml-1">"Symbol partially obscured by revision cloud"</span>
-                </div>
-                <div class="flex gap-1.5">
-                  <button class="btn-accept">✓ Accept</button>
-                  <button class="btn-correct">✏ Correct</button>
-                  <button class="btn-flag">⚑ Flag</button>
-                </div>
-              </div>
-
-              <!-- Card 3: MEDIUM -->
-              <div class="bg-white border border-[#E5E7EB] risk-medium rounded-lg p-3.5">
-                <div class="flex items-start justify-between mb-2">
-                  <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                      <span class="bg-[#FEF3C7] text-[#D97706] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">MEDIUM</span>
-                      <span class="text-[#0F172A] font-semibold text-xs">SD-44</span>
-                    </div>
-                    <div class="text-[#374151] text-xs">Supply Diffuser · Floor 2, Room 204</div>
-                  </div>
-                  <div class="text-right shrink-0 ml-2">
-                    <div class="text-[#0F172A] font-bold text-sm">$85</div>
-                    <div class="wf-label">est. value</div>
-                  </div>
-                </div>
-                <div class="mb-2">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="wf-label">AI confidence</span>
-                    <span class="text-[#F59E0B] text-xs font-bold">83%</span>
-                  </div>
-                  <div class="conf-bar">
-                    <div class="conf-fill-amber" style="width: 83%;"></div>
-                  </div>
-                </div>
-                <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-md px-2.5 py-1.5 mb-2.5">
-                  <span class="text-[#F59E0B] text-[10px]">⚠</span>
-                  <span class="text-[#92400E] text-[10px] ml-1">"Detected as 24×24; spec schedule shows 18×18 in this zone"</span>
-                </div>
-                <div class="flex gap-1.5">
-                  <button class="btn-accept">✓ Accept</button>
-                  <button class="btn-correct">✏ Correct</button>
-                  <button class="btn-flag">⚑ Flag</button>
-                </div>
-              </div>
-
-              <!-- Card 4: LOW -->
-              <div class="bg-white border border-[#E5E7EB] risk-low rounded-lg p-3.5 opacity-80">
-                <div class="flex items-start justify-between mb-2">
-                  <div>
-                    <div class="flex items-center gap-2 mb-0.5">
-                      <span class="bg-[#F3F4F6] text-[#6B7280] text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full">LOW</span>
-                      <span class="text-[#374151] font-semibold text-xs">FD-118</span>
-                    </div>
-                    <div class="text-[#6B7280] text-xs">Flex Duct Connection · Floor 1</div>
-                  </div>
-                  <div class="text-right shrink-0 ml-2">
-                    <div class="text-[#6B7280] font-bold text-sm">$22</div>
-                    <div class="wf-label">est. value</div>
-                  </div>
-                </div>
-                <div class="mb-2.5">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="wf-label">AI confidence</span>
-                    <span class="text-[#22C55E] text-xs font-bold">96%</span>
-                  </div>
-                  <div class="conf-bar">
-                    <div class="conf-fill-green" style="width: 96%;"></div>
-                  </div>
-                </div>
-                <div class="flex gap-1.5">
-                  <button class="btn-accept">✓ Accept</button>
-                  <button class="btn-skip">Skip →</button>
-                </div>
-              </div>
-
-            </div><!-- end cards -->
+            <div class="wf-item h">
+              <div class="wf-irow"><div><div class="wf-iname">VAV-12 · Variable Air Volume</div><div class="wf-isub">Floor 3, Zone B</div></div><div class="wf-ival">$2,100</div></div>
+              <div class="wf-conf"><div class="wf-conf-fill" style="width:74%;background:var(--orange)"></div></div>
+              <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 74% · HIGH RISK</div>
+              <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div><div class="wf-act wf-act-f">⚑ Flag</div></div>
+            </div>
+            <div class="wf-item m">
+              <div class="wf-irow"><div><div class="wf-iname">SD-44 · Supply Diffuser</div><div class="wf-isub">Floor 2, Room 204</div></div><div class="wf-ival">$85</div></div>
+              <div class="wf-conf"><div class="wf-conf-fill" style="width:83%;background:var(--orange)"></div></div>
+              <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 83% · MEDIUM</div>
+              <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div></div>
+            </div>
+            <div style="background:var(--g900);padding:8px 12px;border-radius:6px;font-size:11px;color:rgba(255,255,255,.45);display:flex;gap:12px;margin-top:8px">
+              <span><kbd>↑↓</kbd> Navigate</span><span><kbd>Enter</kbd> Open</span><span><kbd>A</kbd> Accept</span>
+            </div>
           </div>
-        </div><!-- end wf-outer -->
-
-        <!-- Annotation callout -->
-        <div class="mt-4 border-l-4 border-dashed border-[#9CA3AF] pl-4">
-          <p class="text-[#6B7280] text-xs italic leading-relaxed">
-            <span class="text-[#374151] font-semibold not-italic">Design rationale:</span> High-risk items always surface first regardless of their position in the drawing. The estimator never has to scroll to find what matters — the ranked queue does the triage work automatically. Low-value, high-confidence items like FD-118 get a single "Skip →" option to explicitly acknowledge without requiring a full review decision.
-          </p>
         </div>
-      </div><!-- end WF1 -->
+        <div style="margin-top:10px;padding-left:12px;border-left:3px solid var(--blue);font-size:13px;color:var(--g600);font-style:italic;line-height:1.5">High-risk items surface first. Dollar value anchors urgency without making it the sort key.</div>
+      </div>
 
-
-      <!-- ── WIREFRAME 2: In-Context Validation Mode ── -->
+      <!-- Detail wireframe -->
       <div>
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-6 h-6 rounded-full bg-[#0F172A] flex items-center justify-center">
-            <span class="text-white text-[10px] font-bold">2</span>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--g400);letter-spacing:.06em;margin-bottom:10px">Wireframe 2 — Detail View (AHU-03)</div>
+        <div class="wf-outer">
+          <div class="wf-chrome">
+            <div class="wf-dot" style="background:#ef4444"></div>
+            <div class="wf-dot" style="background:#f59e0b"></div>
+            <div class="wf-dot" style="background:#22c55e"></div>
+            <div class="wf-url"><span>beam.ai / review / AHU-03</span></div>
           </div>
-          <span class="text-[#0F172A] font-bold text-sm">In-Context Validation — Detail View (AHU-03)</span>
-        </div>
-
-        <!-- Wireframe container -->
-        <div class="wf-outer p-0 overflow-hidden">
-
-          <!-- WF Header bar -->
-          <div class="bg-[#E5E7EB] border-b border-[#D1D5DB] px-4 py-2.5 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-              <div class="w-3 h-3 rounded-full bg-[#D1D5DB]"></div>
-              <span class="wf-label ml-2">beam.ai / review / AHU-03</span>
+          <div class="wf-detail">
+            <div class="wf-d-id">AHU-03 · Air Handling Unit</div>
+            <span class="wf-d-badge">HIGH RISK</span>
+            <table class="wf-dt">
+              <tr><td>Qty</td><td>1 unit</td></tr>
+              <tr><td>Type</td><td>Rooftop Package</td></tr>
+              <tr><td>Capacity</td><td>20 Ton</td></tr>
+              <tr><td>Est. Value</td><td>$38,400</td></tr>
+            </table>
+            <div class="wf-flag">⚠ Overlapping bounding box with AHU-02 — possible double-count. Verify equipment schedule.</div>
+            <table class="wf-sched">
+              <tr><th>Unit</th><th>Status</th></tr>
+              <tr><td>AHU-01</td><td style="color:var(--green);font-weight:600">✓ Match</td></tr>
+              <tr><td>AHU-02</td><td style="color:var(--green);font-weight:600">✓ Match</td></tr>
+              <tr class="rev"><td>AHU-03</td><td style="color:var(--red);font-weight:600">← Reviewing</td></tr>
+            </table>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+              <div class="wf-act wf-act-a" style="padding:5px 10px">✓ Accept [A]</div>
+              <div class="wf-act wf-act-c" style="padding:5px 10px">✏ Correct [C]</div>
+              <div class="wf-act wf-act-f" style="padding:5px 10px">⚑ Flag [F]</div>
             </div>
-            <span class="wf-label text-[10px]">Item 1 of 24 high-risk</span>
           </div>
-
-          <div class="p-4 space-y-3">
-
-            <!-- Drawing thumbnail -->
-            <div>
-              <div class="wf-label mb-1.5">Drawing — Floor 4 Mechanical Plan (1:100)</div>
-              <div class="wf-box relative h-36 overflow-hidden">
-                <!-- Grid lines to simulate drawing -->
-                <div class="absolute inset-0 opacity-30" style="background-image: linear-gradient(#9CA3AF 1px, transparent 1px), linear-gradient(90deg, #9CA3AF 1px, transparent 1px); background-size: 24px 24px;"></div>
-                <!-- Duct lines -->
-                <div class="absolute" style="left:20%; top:30%; width:60%; height:2px; background:#9CA3AF;"></div>
-                <div class="absolute" style="left:40%; top:20%; width:2px; height:50%; background:#9CA3AF;"></div>
-                <div class="absolute" style="left:60%; top:30%; width:2px; height:30%; background:#9CA3AF;"></div>
-                <!-- Diffuser symbols -->
-                <div class="absolute w-4 h-4 border border-[#9CA3AF] rounded-sm bg-white/60 wf-label flex items-center justify-center text-[7px]" style="left:25%; top:25%;">SD</div>
-                <div class="absolute w-4 h-4 border border-[#9CA3AF] rounded-sm bg-white/60 wf-label flex items-center justify-center text-[7px]" style="left:55%; top:50%;">SD</div>
-                <!-- AHU bounding box — highlighted -->
-                <div class="absolute border-2 border-[#EF4444] rounded-sm bg-[#FEE2E2]/40" style="left:38%; top:18%; width:12%; height:16%;">
-                  <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#EF4444] text-white text-[8px] font-bold px-1 rounded whitespace-nowrap">AHU-03</div>
-                </div>
-                <!-- Adjacent annotation (AHU-02) — overlapping -->
-                <div class="absolute border border-dashed border-[#F59E0B] rounded-sm bg-[#FEF3C7]/30" style="left:43%; top:15%; width:10%; height:16%;">
-                  <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[#F59E0B] text-[7px] font-bold whitespace-nowrap">AHU-02</div>
-                </div>
-                <!-- Overlap indicator -->
-                <div class="absolute wf-label text-[8px] font-bold" style="right:5%; bottom:5%;">Grid C-7</div>
-              </div>
-              <div class="text-[10px] text-[#6B7280] mt-1.5">AHU-03 detected at Grid C-7, Floor 4</div>
-            </div>
-
-            <!-- Detection info -->
-            <div class="bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-3">
-              <div class="grid grid-cols-3 gap-3">
-                <div>
-                  <div class="wf-label mb-0.5">Detected qty.</div>
-                  <div class="text-[#0F172A] font-bold text-sm">1 unit</div>
-                </div>
-                <div>
-                  <div class="wf-label mb-0.5">Type</div>
-                  <div class="text-[#0F172A] text-xs font-medium">Rooftop pkg.</div>
-                </div>
-                <div>
-                  <div class="wf-label mb-0.5">Capacity</div>
-                  <div class="text-[#0F172A] text-xs font-medium">20 ton</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Conflict callout -->
-            <div class="bg-[#FFFBEB] border border-[#FCD34D] rounded-lg p-3">
-              <div class="flex gap-2">
-                <span class="text-[#F59E0B] shrink-0">⚠</span>
-                <div>
-                  <div class="text-[#92400E] font-semibold text-xs mb-1">Possible double-count detected</div>
-                  <div class="text-[#78350F] text-xs leading-relaxed">Adjacent annotation AHU-02 overlaps bounding box by 34%. Both annotations detected within a 2-ft radius. Verify against equipment schedule — one may be a duplicate detection.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Equipment schedule reference -->
-            <div>
-              <div class="wf-label mb-1.5">Equipment Schedule Reference — AHU Units</div>
-              <div class="border border-[#E5E7EB] rounded-lg overflow-hidden">
-                <table class="w-full text-xs">
-                  <thead>
-                    <tr class="bg-[#E5E7EB]">
-                      <th class="wf-label text-left px-3 py-1.5">Tag</th>
-                      <th class="wf-label text-left px-3 py-1.5">Type</th>
-                      <th class="wf-label text-left px-3 py-1.5">Capacity</th>
-                      <th class="wf-label text-left px-3 py-1.5">Floor</th>
-                      <th class="wf-label text-left px-3 py-1.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#F3F4F6]">
-                    <tr class="bg-white">
-                      <td class="px-3 py-1.5 text-[#374151]">AHU-01</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">Roof pkg.</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">15T</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">2</td>
-                      <td class="px-3 py-1.5"><span class="text-[#22C55E] font-semibold">✓ Match</span></td>
-                    </tr>
-                    <tr class="bg-white">
-                      <td class="px-3 py-1.5 text-[#374151]">AHU-02</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">Roof pkg.</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">20T</td>
-                      <td class="px-3 py-1.5 text-[#6B7280]">4</td>
-                      <td class="px-3 py-1.5"><span class="text-[#22C55E] font-semibold">✓ Match</span></td>
-                    </tr>
-                    <tr class="bg-[#FEF2F2] border-l-2 border-[#EF4444]">
-                      <td class="px-3 py-1.5 text-[#0F172A] font-semibold">AHU-03</td>
-                      <td class="px-3 py-1.5 text-[#374151]">Roof pkg.</td>
-                      <td class="px-3 py-1.5 text-[#374151]">20T</td>
-                      <td class="px-3 py-1.5 text-[#374151]">4</td>
-                      <td class="px-3 py-1.5"><span class="text-[#EF4444] font-semibold text-[10px]">← Reviewing</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Action row -->
-            <div class="border-t border-[#E5E7EB] pt-3">
-              <div class="flex items-center gap-2 flex-wrap">
-                <button class="btn-skip flex items-center gap-1">← Prev</button>
-                <div class="flex gap-1.5 flex-1">
-                  <button class="btn-accept flex-1 text-center">
-                    <kbd class="mr-1">A</kbd>Accept
-                  </button>
-                  <button class="btn-correct flex-1 text-center">
-                    <kbd class="mr-1">C</kbd>Correct
-                  </button>
-                  <button class="btn-flag flex-1 text-center">
-                    <kbd class="mr-1">F</kbd>Flag
-                  </button>
-                </div>
-                <button class="btn-skip flex items-center gap-1">Next →</button>
-              </div>
-            </div>
-
-            <!-- Keyboard shortcut strip -->
-            <div class="bg-[#0F172A] rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-              <div class="flex items-center gap-1.5">
-                <kbd>A</kbd><span class="text-[#9CA3AF] text-[10px]">Accept</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <kbd>C</kbd><span class="text-[#9CA3AF] text-[10px]">Correct</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <kbd>F</kbd><span class="text-[#9CA3AF] text-[10px]">Flag</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <kbd>←</kbd><kbd>→</kbd><span class="text-[#9CA3AF] text-[10px]">Navigate</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <kbd>Esc</kbd><span class="text-[#9CA3AF] text-[10px]">Back to queue</span>
-              </div>
-            </div>
-
-          </div><!-- end inner p-4 -->
-        </div><!-- end wf-outer -->
-
-        <!-- Annotation callout -->
-        <div class="mt-4 border-l-4 border-dashed border-[#9CA3AF] pl-4">
-          <p class="text-[#6B7280] text-xs italic leading-relaxed">
-            <span class="text-[#374151] font-semibold not-italic">Design rationale:</span> The drawing context stays visible while the estimator reviews. When they press [A], [C], or [F], the view advances to the next item — the drawing thumbnail updates automatically. The estimator never loses their place, never opens a second window, and never touches the mouse if they don't need to. The equipment schedule reference is surfaced automatically when the AI flags a potential double-count.
-          </p>
+          <div style="background:var(--g900);padding:8px 12px;display:flex;gap:14px;font-size:11px;color:rgba(255,255,255,.4)">
+            <span><kbd>A</kbd> Accept</span><span><kbd>C</kbd> Correct</span><span><kbd>F</kbd> Flag</span><span><kbd>←→</kbd> Navigate</span><span><kbd>Esc</kbd> Queue</span>
+          </div>
         </div>
-      </div><!-- end WF2 -->
+        <div style="margin-top:10px;padding-left:12px;border-left:3px solid var(--blue);font-size:13px;color:var(--g600);font-style:italic;line-height:1.5">Drawing context and equipment schedule inline — no context switching required.</div>
+      </div>
+    </div>
 
-    </div><!-- end grid -->
+    <!-- Prototype CTA -->
+    <div style="margin-top:48px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r12);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--g900);margin-bottom:6px">See this as a working prototype →</div>
+        <div style="font-size:15px;color:var(--g600)">The queue, detail view, and export flow — interactive, step by step.</div>
+      </div>
+      <button class="btn btn-blue" onclick="showView('proto')" style="flex-shrink:0">Open Prototype</button>
+    </div>
   </div>
 </section>
 
-
-<!-- ════════════════════════════════════════
-     SECTION 5: ROLLOUT PLAN + RISK
-════════════════════════════════════════ -->
-<section id="rollout" class="py-16 sm:py-20">
-  <div class="max-w-6xl mx-auto px-5">
-
-    <div class="section-tag">Section 5 — Rollout Plan</div>
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[#0F172A] mb-2">How to ship this in three moves</h2>
-    <p class="text-[#6B7280] text-base mb-10 max-w-2xl leading-relaxed">Each version builds evidence for the next. We don't ship the full prioritization logic until we've validated that surfacing uncertainty changes estimator behavior.</p>
-
-    <!-- Rollout table -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-0 rounded-2xl overflow-hidden border border-[#E5E7EB] mb-10 shadow-sm">
-
-      <!-- v0 -->
-      <div class="bg-white p-6 border-b md:border-b-0 md:border-r border-[#E5E7EB]">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="bg-[#F3F4F6] text-[#374151] text-xs font-bold px-2 py-0.5 rounded-full">v0</span>
-          <span class="text-[#6B7280] text-xs">Weeks 1–4</span>
-        </div>
-        <div class="text-[#0F172A] font-bold text-base mb-1">"Confidence Surfacing"</div>
-        <div class="text-[#2563EB] text-xs font-medium mb-4">Zero model changes required</div>
-
-        <div class="space-y-4">
-          <div>
-            <div class="text-[#374151] text-xs font-semibold mb-1.5">Scope</div>
-            <p class="text-[#6B7280] text-sm leading-relaxed">Show AI confidence score on every annotation. No queue ranking yet. Just make uncertainty visible to the estimator.</p>
-          </div>
-          <div>
-            <div class="text-[#374151] text-xs font-semibold mb-1.5">Metric to watch</div>
-            <p class="text-[#6B7280] text-sm leading-relaxed">Do estimators spend more time on low-confidence items? Measured via time-on-item telemetry per annotation.</p>
-          </div>
-          <div class="bg-[#F9FAFB] rounded-lg p-3">
-            <div class="text-[#374151] text-xs font-semibold mb-1">Why this first</div>
-            <p class="text-[#6B7280] text-xs leading-relaxed">Zero new model work. Uses existing confidence scores already produced by Beam's pipeline. Proves the hypothesis — that surfacing uncertainty changes review behavior — before building the full ranking system.</p>
-          </div>
+<!-- S5 ROLLOUT -->
+<section id="s5" class="section" style="background:var(--g50)">
+  <div class="container">
+    <span class="section-label">Rollout Plan</span>
+    <h2 class="section-title">Three-phase strategy</h2>
+    <p class="section-body">Each phase ships something estimators can use immediately, then instruments the data needed to justify the next phase.</p>
+    <div class="rollout-grid">
+      <div class="rc">
+        <div class="rc-hdr v0"><span class="rc-ver">v0</span><span class="rc-time">Weeks 1–4</span></div>
+        <div class="rc-body">
+          <div class="rc-scope">Surface confidence scores alongside existing annotations — no ranking or reordering. Estimators see one new signal without any workflow change.</div>
+          <div class="rc-mlbl">Key metric</div><div class="rc-mval">Time-on-item by confidence level</div>
+          <div class="rc-rat">Does the estimator spend more time on low-confidence items? If not, the signal isn't legible.</div>
         </div>
       </div>
-
-      <!-- v1 -->
-      <div class="bg-[#EFF6FF] p-6 border-b md:border-b-0 md:border-r border-[#BFDBFE]">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="bg-[#BFDBFE] text-[#1D4ED8] text-xs font-bold px-2 py-0.5 rounded-full">v1</span>
-          <span class="text-[#3B82F6] text-xs">Weeks 5–12</span>
-        </div>
-        <div class="text-[#1E3A8A] font-bold text-base mb-1">"Risk-Ranked Queue"</div>
-        <div class="text-[#2563EB] text-xs font-medium mb-4">Core product — ship when v0 validates</div>
-
-        <div class="space-y-4">
-          <div>
-            <div class="text-[#1D4ED8] text-xs font-semibold mb-1.5">Scope</div>
-            <p class="text-[#3B82F6] text-sm leading-relaxed">Add dollar-value weighting, ranked queue, keyboard shortcuts [A]/[C]/[F], and progress bar showing % reviewed vs. review complete threshold.</p>
-          </div>
-          <div>
-            <div class="text-[#1D4ED8] text-xs font-semibold mb-1.5">Metric to watch</div>
-            <p class="text-[#3B82F6] text-sm leading-relaxed">Review completion time per drawing. Target: under 25 min for a 40-sheet job.</p>
-          </div>
-          <div class="bg-white/60 rounded-lg p-3">
-            <div class="text-[#1D4ED8] text-xs font-semibold mb-1">Why this order</div>
-            <p class="text-[#3B82F6] text-xs leading-relaxed">v0 data tells us which item categories estimators over-check. v1 uses that to calibrate the risk model before shipping it to all users. We're not guessing at the weights — we're learning them.</p>
-          </div>
+      <div class="rc">
+        <div class="rc-hdr v1"><span class="rc-ver">v1</span><span class="rc-time">Weeks 5–12</span></div>
+        <div class="rc-body">
+          <div class="rc-scope">Add ranked queue, keyboard shortcuts, and progress bar. Export requires all high-risk items to be cleared before BoQ download.</div>
+          <div class="rc-mlbl">Key metric</div><div class="rc-mval">Review time under 25 min</div>
+          <div class="rc-rat">If confidence is calibrated, high-risk-first ordering should make review faster, not slower.</div>
         </div>
       </div>
-
-      <!-- v2 -->
-      <div class="bg-[#F0FDF4] p-6">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="bg-[#86EFAC] text-[#166534] text-xs font-bold px-2 py-0.5 rounded-full">v2</span>
-          <span class="text-[#16A34A] text-xs">Weeks 13–20</span>
-        </div>
-        <div class="text-[#14532D] font-bold text-base mb-1">"Smart Review Complete"</div>
-        <div class="text-[#22C55E] text-xs font-medium mb-4">Export gate + session summary</div>
-
-        <div class="space-y-4">
-          <div>
-            <div class="text-[#166534] text-xs font-semibold mb-1.5">Scope</div>
-            <p class="text-[#16A34A] text-sm leading-relaxed">"Review Complete" state triggered when all High-Risk items are reviewed and overall review exceeds 60%. Export is gated on this state. A session summary appears before export showing what was accepted, corrected, and flagged.</p>
-          </div>
-          <div>
-            <div class="text-[#166534] text-xs font-semibold mb-1.5">Metric to watch</div>
-            <p class="text-[#16A34A] text-sm leading-relaxed">Post-export error rate vs. pre-Quick Review baseline.</p>
-          </div>
-          <div class="bg-white/60 rounded-lg p-3">
-            <div class="text-[#166534] text-xs font-semibold mb-1">Why export gate</div>
-            <p class="text-[#16A34A] text-xs leading-relaxed">The gate is the product making a commitment to the estimator: "this is complete enough to bid on." Without it, "Review Complete" is advisory and gets ignored.</p>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- end rollout table -->
-
-    <!-- Risk callout -->
-    <div class="bg-[#0F172A] rounded-2xl p-6 sm:p-8">
-      <div class="flex gap-4">
-        <div class="text-[#EF4444] text-2xl shrink-0 mt-0.5">⚡</div>
-        <div>
-          <div class="text-white font-bold text-base mb-3">The risk to test before full build</div>
-          <p class="text-[#94A3B8] text-sm leading-relaxed mb-4">
-            The prioritization model assumes AI confidence scores are calibrated — that a 61% confidence score genuinely reflects a higher error rate than a 91% score, at scale, across drawing types and carriers.
-          </p>
-          <p class="text-[#94A3B8] text-sm leading-relaxed mb-4">
-            If confidence scores are not calibrated — if the AI is equally uncertain about everything — the entire prioritization layer produces no value. High-risk items surface, but they're no more likely to be wrong than low-risk ones. The estimator learns this within a week and stops trusting the queue.
-          </p>
-          <div class="bg-white/[0.06] border border-white/10 rounded-xl p-4">
-            <div class="text-[#F59E0B] font-semibold text-sm mb-2">The test to run before v1 ships</div>
-            <p class="text-[#CBD5E1] text-sm leading-relaxed">Take 50 historical drawings with known correction data. Rank every annotation by AI confidence score. Verify that items in the bottom confidence quartile were corrected at a meaningfully higher rate than the top quartile. If the correction rate doesn't differ by at least 2×, we redefine "risk" using item dollar value alone — and note that the confidence score is decorative, not predictive. Either outcome is useful. Not testing this before shipping v1 is not.</p>
-          </div>
+      <div class="rc">
+        <div class="rc-hdr v2"><span class="rc-ver">v2</span><span class="rc-time">Weeks 13–20</span></div>
+        <div class="rc-body">
+          <div class="rc-scope">Export gating + session summary. Flagged items surfaced to project lead. Post-export error tracking via field integration.</div>
+          <div class="rc-mlbl">Key metric</div><div class="rc-mval">Post-export error rate &lt;1.5%</div>
+          <div class="rc-rat">The final signal: does the AI-gated review actually catch more mistakes?</div>
         </div>
       </div>
     </div>
-
+    <div class="risk-callout">
+      <div class="risk-lbl">Critical risk to validate before v1</div>
+      <p>AI confidence scores must be calibrated — lower scores must correlate with higher correction rates at a <strong>2× minimum difference</strong> across 50 historical drawings. If uncalibrated: pivot to dollar-value-only prioritization.</p>
+    </div>
   </div>
 </section>
 
-
-<!-- ════════════════════════════════════════
-     FOOTER
-════════════════════════════════════════ -->
-<footer class="bg-[#0F172A] py-10 border-t border-white/10">
-  <div class="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-7 h-7 rounded-lg bg-[#2563EB] flex items-center justify-center">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L7 2L12 7L7 12L2 7Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
-      </div>
-      <span class="text-white font-bold text-sm">Beam AI</span>
-      <span class="text-white/30">·</span>
-      <span class="text-white/50 text-xs">Quick Review Workflow — PM Case Study</span>
-    </div>
-    <div class="flex flex-col sm:flex-row items-center gap-3">
-      <span class="text-white/40 text-xs">Naman Gautam · PM Case Study · 2026</span>
-      <a href="https://linkedin.com/in/namangautam08" target="_blank"
-         class="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="12" height="12" rx="2"/><path d="M3.5 5.5h1.5V10H3.5zm.75-2.25a.875.875 0 100 1.75.875.875 0 000-1.75zM6.5 5.5H8v.65c.3-.45.85-.75 1.5-.75C10.9 5.4 11 6.5 11 7.5V10H9.5V7.75c0-.6-.1-1.25-.75-1.25-.75 0-.75.7-.75 1.25V10H6.5z" fill="white"/></svg>
-        linkedin.com/in/namangautam08
-      </a>
-    </div>
+<!-- FOOTER -->
+<footer style="background:var(--navy);padding:40px 0;border-top:1px solid rgba(255,255,255,.07)">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div style="color:rgba(255,255,255,.5);font-size:14px">Naman Gautam · PM Case Study · 2026</div>
+    <a href="https://www.linkedin.com/in/namangautam08/" target="_blank" rel="noopener" style="color:#60a5fa;font-size:14px;transition:var(--t)" onmouseover="this.style.color='#93c5fd'" onmouseout="this.style.color='#60a5fa'">linkedin.com/in/namangautam08 ↗</a>
   </div>
 </footer>
+</div><!-- /cs-view -->
 
+<!-- ════════════════════ PROTOTYPE VIEW ════════════════════ -->
+<div id="proto-view">
+
+<!-- STEP 1: UPLOAD -->
+<div id="pstep1" class="proto-step-view active">
+  <div class="up-wrap">
+    <div class="up-h">Step 1 — Upload Drawing</div>
+    <div class="up-sub">Start a review session by uploading a mechanical drawing set, or use the sample drawing to explore the workflow.</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="dzDrag(event,true)" ondragleave="dzDrag(event,false)" ondrop="dzDrop(event)" role="button" tabindex="0" aria-label="Drop PDF drawings here or click to browse" onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('file-input').click()">
+      <div class="dz-icon">📄</div>
+      <div class="dz-main">Drop your mechanical drawings here</div>
+      <div class="dz-sub">PDF · Max 200MB</div>
+    </div>
+    <input type="file" id="file-input" accept=".pdf" onchange="startUpload('custom')">
+    <div class="up-sep">or</div>
+    <button class="btn btn-navy" id="sample-btn" onclick="startUpload('sample')">Use sample drawing →</button>
+    <div class="up-progress" id="up-progress">
+      <div class="up-plbl" id="up-plbl">Processing drawing 40-B…</div>
+      <div class="up-track"><div class="up-fill" id="up-fill"></div></div>
+    </div>
+    <div class="up-note">In production, Beam AI processes drawings in 24–72 hours. This demo simulates an already-processed result.</div>
+  </div>
+</div>
+
+<!-- STEP 2: REVIEW QUEUE -->
+<div id="pstep2" class="proto-step-view">
+  <div class="q-wrap">
+    <div class="q-hdr" id="tour-queue-hdr">
+      <div class="q-title">Drawing 40-B · Floor Plans · 452 annotations detected</div>
+      <div class="q-prog-row">
+        <div class="q-prog-track"><div class="q-prog-fill" id="q-prog-fill" style="width:9%"></div></div>
+        <div class="q-prog-lbl" id="q-prog-lbl">41 of 452 reviewed · 9%</div>
+      </div>
+    </div>
+    <div class="filter-bar" id="tour-filters" role="tablist" aria-label="Filter annotations">
+      <button class="ftab fa" data-f="all" onclick="setFilter('all')" role="tab" aria-selected="true">All</button>
+      <button class="ftab" data-f="high" onclick="setFilter('high')" role="tab" aria-selected="false">High Risk <span id="hc">24</span></button>
+      <button class="ftab" data-f="med" onclick="setFilter('med')" role="tab" aria-selected="false">Medium <span id="mc2">87</span></button>
+      <button class="ftab" data-f="low" onclick="setFilter('low')" role="tab" aria-selected="false">Low</button>
+      <button class="ftab" data-f="flag" onclick="setFilter('flag')" role="tab" aria-selected="false">Flagged <span id="fc">0</span></button>
+    </div>
+    <div class="items-grid" id="items-grid" role="list" aria-label="Annotation items"></div>
+    <div class="q-empty" id="q-empty" style="display:none">No items in this filter.</div>
+  </div>
+  <div class="q-hint" id="tour-kbhint" role="toolbar" aria-label="Keyboard shortcuts">
+    <span class="hint-i"><kbd>↑↓</kbd> Navigate</span>
+    <span class="hint-i"><kbd>Enter</kbd> Open</span>
+    <span class="hint-i"><kbd>A</kbd> Accept</span>
+    <span class="hint-i"><kbd>C</kbd> Correct</span>
+    <span class="hint-i"><kbd>F</kbd> Flag</span>
+    <button class="hint-btn" id="complete-btn" onclick="checkComplete()" style="display:none">Complete Review →</button>
+  </div>
+</div>
+
+<!-- STEP 3: DETAIL VIEW -->
+<div id="pstep3" class="proto-step-view">
+  <div class="dv-wrap">
+    <div class="dv-topbar">
+      <div class="dv-crumb">Review Queue → <b id="dv-id-crumb">AHU-03</b></div>
+      <div class="dv-navs">
+        <button class="dv-nav" id="dv-prev" onclick="dvNav(-1)" aria-label="Previous item">← Prev</button>
+        <button class="dv-nav" id="dv-next" onclick="dvNav(1)" aria-label="Next item">Next →</button>
+        <button class="dv-nav" onclick="goStep(2)" aria-label="Back to queue">← Queue</button>
+      </div>
+    </div>
+    <div class="dv-split">
+      <div>
+        <div class="dv-item-id" id="dv-id">AHU-03</div>
+        <div class="dv-item-sub" id="dv-sub">Air Handling Unit · Floor 4</div>
+        <div class="dv-badges">
+          <span id="dv-risk" class="rpill rh">HIGH RISK</span>
+          <span id="dv-val" class="dv-val">$38,400</span>
+          <span class="ii" data-tip="src-ahu">i</span>
+        </div>
+        <table class="detail-tbl" id="dv-tbl"></table>
+        <div class="flag-box" id="dv-flag" style="display:none">
+          <div class="flag-lbl">⚠ Flag Reason</div>
+          <div class="flag-txt" id="dv-flag-txt"></div>
+        </div>
+        <table class="sched-tbl" id="dv-sched" style="width:100%;margin-bottom:20px">
+          <thead><tr><th>Unit</th><th>Status</th></tr></thead>
+          <tbody id="dv-sched-body"></tbody>
+        </table>
+        <div class="action-row" id="tour-actions">
+          <button class="abn ab-acc" id="btn-acc" onclick="doAction('accepted')" aria-label="Accept item"><kbd>A</kbd> Accept</button>
+          <button class="abn ab-cor" id="btn-cor" onclick="doAction('corrected')" aria-label="Mark as corrected"><kbd>C</kbd> Correct</button>
+          <button class="abn ab-flg" id="btn-flg" onclick="doAction('flagged')" aria-label="Flag for review"><kbd>F</kbd> Flag</button>
+        </div>
+        <div class="done-banner" id="dv-done-banner">✓ Marked — advancing to next item</div>
+      </div>
+      <div>
+        <svg class="drawing-svg" id="drawing-svg" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg" aria-label="Drawing illustration" role="img"></svg>
+        <div class="drawing-note" id="tour-drawing">Drawing view is illustrative. In production, the actual PDF sheet renders here with the annotation highlighted in context.</div>
+      </div>
+    </div>
+  </div>
+  <div class="dv-kbar">
+    <div class="dv-kbar-inner">
+      <span class="hint-i"><kbd>A</kbd> Accept</span>
+      <span class="hint-i"><kbd>C</kbd> Correct</span>
+      <span class="hint-i"><kbd>F</kbd> Flag</span>
+      <span class="hint-i"><kbd>←→</kbd> Navigate</span>
+      <span class="hint-i"><kbd>Esc</kbd> Back to queue</span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: SUMMARY -->
+<div id="pstep4" class="proto-step-view">
+  <div class="sum-wrap">
+    <div class="sum-badge">✓ Review Complete</div>
+    <div class="sum-h">Drawing 40-B</div>
+    <div class="sum-sub" id="sum-sub">Review session complete. Here's what was covered.</div>
+    <div class="sum-stats" id="sum-stats"></div>
+    <div class="donut-row">
+      <svg id="donut-svg" width="140" height="140" viewBox="0 0 140 140" aria-label="Review results chart"></svg>
+      <div class="donut-legend" id="donut-legend"></div>
+    </div>
+    <div style="font-size:13px;color:var(--g400);margin-bottom:24px;padding:12px 16px;background:var(--g50);border-radius:8px;border:1px solid var(--g200)">
+      In a full review, all 24 high-risk items must be cleared and overall coverage must exceed 60% before export is enabled. This demo shows a condensed flow.
+    </div>
+    <table class="rev-tbl">
+      <thead><tr><th>Item</th><th>Type</th><th>Value</th><th>Status</th></tr></thead>
+      <tbody id="rev-tbody"></tbody>
+    </table>
+    <div class="exp-box" id="tour-export">
+      <div class="exp-h">Ready to export?</div>
+      <div class="exp-desc">Export generates a structured Bill of Quantities with accepted quantities, corrections logged, and flagged items marked for team review.</div>
+      <div class="exp-btns">
+        <button class="btn btn-green" onclick="doExport('excel')">⬇ Export BoQ · Excel</button>
+        <button class="btn btn-outline" onclick="doExport('pdf')">⬇ Export BoQ · PDF</button>
+      </div>
+      <div class="exp-note">Export buttons are illustrative in this demo.</div>
+    </div>
+    <div style="margin-top:24px;text-align:center">
+      <button class="btn btn-outline" onclick="resetAll()">↺ Start New Review</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /proto-view -->
+
+<!-- Tooltip -->
+<div id="tip" role="tooltip" aria-live="polite"></div>
+
+<!-- Tour overlay -->
+<div id="tour" role="dialog" aria-modal="true" aria-label="Guided tour">
+  <div id="tour-back" onclick="endTour()"></div>
+  <div id="tour-spot"></div>
+  <div id="tour-tip">
+    <h4 id="tour-h"></h4>
+    <p id="tour-p"></p>
+    <div class="tour-row">
+      <span class="tour-skip" onclick="endTour()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')endTour()">Skip tour</span>
+      <span class="tour-prog" id="tour-prog"></span>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" role="alert" aria-live="polite">
+  <div class="t-icon">✓</div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ─── DATA ───
+const ITEMS = [
+  {id:'AHU-03',name:'Air Handling Unit',loc:'F4',val:38400,conf:61,risk:'high',flag:'Overlapping bounding box with AHU-02 — possible double-count. Verify equipment schedule.',sched:[{u:'AHU-01',s:'match'},{u:'AHU-02',s:'match'},{u:'AHU-03',s:'rev'}]},
+  {id:'RTU-01',name:'Rooftop Unit',loc:'Roof',val:42000,conf:65,risk:'high',flag:'Detected at roof level but not in rooftop equipment schedule. Verify with architectural plans.',sched:[{u:'RTU-01',s:'rev'},{u:'RTU-02',s:'match'}]},
+  {id:'AHU-07',name:'Air Handling Unit',loc:'F2',val:24200,conf:58,risk:'high',flag:'Bounding box dimensions inconsistent with AHU schedule — may be misclassified RTU.',sched:[{u:'AHU-06',s:'match'},{u:'AHU-07',s:'rev'},{u:'AHU-08',s:'match'}]},
+  {id:'VAV-12',name:'Variable Air Volume',loc:'F3 Zone B',val:2100,conf:74,risk:'high',flag:'Symbol partially obscured by revision cloud on sheet M-3.',sched:[{u:'VAV-11',s:'match'},{u:'VAV-12',s:'rev'}]},
+  {id:'FCU-15',name:'Fan Coil Unit',loc:'F3',val:3200,conf:81,risk:'med',flag:'Unit type ambiguous — could be FCU or AHU based on symbol size.',sched:[{u:'FCU-14',s:'match'},{u:'FCU-15',s:'rev'}]},
+  {id:'VAV-08',name:'Variable Air Volume',loc:'F1',val:1800,conf:79,risk:'med',flag:'Symbol clarity low — partially hidden by dimension line.',sched:[{u:'VAV-08',s:'rev'},{u:'VAV-09',s:'match'}]},
+  {id:'DP-22',name:'Damper',loc:'F2',val:450,conf:77,risk:'med',flag:"Size annotation missing from drawing — defaulted to standard 12\".",sched:[{u:'DP-22',s:'rev'}]},
+  {id:'SD-44',name:'Supply Diffuser',loc:'F2 R204',val:85,conf:83,risk:'med',flag:'Detected size 24×24; spec schedule references 18×18 for this zone.',sched:[{u:'SD-44',s:'rev'}]},
+  {id:'FD-118',name:'Flex Duct',loc:'F1',val:22,conf:96,risk:'low',flag:null,sched:[]},
+  {id:'GR-09',name:'Grille',loc:'F1',val:45,conf:94,risk:'low',flag:null,sched:[]},
+  {id:'TD-33',name:'Thermal Duct',loc:'F2',val:18,conf:97,risk:'low',flag:null,sched:[]},
+  {id:'FD-201',name:'Flex Duct',loc:'F3',val:30,conf:95,risk:'low',flag:null,sched:[]},
+]
+
+// ─── STATE ───
+var curView='cs', curStep=1, unlockedStep=1
+var activeFilter='all', selectedIdx=0
+var reviews={} // id -> 'accepted'|'corrected'|'flagged'
+var curDetailId=null
+var reviewStart=null
+var tourActive=false, tourStops=[], tourIdx=0
+var tourShown={1:false,2:false,3:false,4:false}
+
+// ─── TOOLTIP DATA ───
+const TIPS={
+  'src-annot':'Source: Beam AI product documentation. Typical annotation count per mechanical drawing set in commercial HVAC projects.',
+  'src-time':'Source: Estimator interviews — assumed; to be validated in beta instrumentation.',
+  'src-ahu':'Source: RSMeans 2024 HVAC cost data. 20-ton rooftop package unit, installed cost. Actual varies by region and specs.',
+  'src-err':'Baseline assumed from Beam AI internal QA standards. To be measured against field verification reports.',
+  'ai-conf':'How certain the AI is about this annotation. Below 70% = High Risk. Score combines symbol clarity, overlap, scale, and historical accuracy.',
+  'est-val':'RSMeans 2024 HVAC unit costs — not live pricing. Actual cost depends on project specs and vendor quotes.',
+  'double-count':'Two annotations within 2ft with overlapping bounding boxes. One may be a duplicate. Verify equipment schedule.',
+  'rev-complete':'All High-Risk items reviewed + overall review rate >60%. Both conditions required before export unlocks.',
+}
+
+// ─── VIEW SWITCHING ───
+function showView(v){
+  curView=v
+  document.getElementById('cs-view').style.display=v==='cs'?'block':'none'
+  document.getElementById('proto-view').style.display=v==='proto'?'block':'none'
+  document.getElementById('cs-pills').style.display=v==='cs'?'flex':'none'
+  document.getElementById('proto-pills').style.display=v==='proto'?'flex':'none'
+  document.getElementById('nav-cta').style.display=v==='cs'?'block':'none'
+  if(v==='proto'){
+    goStep(curStep)
+    if(!tourShown[curStep]) setTimeout(()=>startTour(curStep),600)
+  } else {
+    window.scrollTo({top:0,behavior:'smooth'})
+    setupIntersection()
+  }
+}
+
+function scrollTo(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth'})}
+
+// ─── INTERSECTION OBSERVER (CS NAV) ───
+function setupIntersection(){
+  const secs=['s1','s2','s3','s4','s5']
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        document.querySelectorAll('.nav-pill').forEach(p=>p.classList.remove('active'))
+        const pill=document.querySelector(`.nav-pill[data-section="${e.target.id}"]`)
+        if(pill)pill.classList.add('active')
+      }
+    })
+  },{rootMargin:'-45% 0px -50% 0px'})
+  secs.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el)})
+}
+
+// ─── PROTOTYPE STEPS ───
+function goStep(n){
+  if(n>unlockedStep)return
+  curStep=n
+  document.querySelectorAll('.proto-step-view').forEach(el=>el.classList.remove('active'))
+  const el=document.getElementById('pstep'+n)
+  if(el)el.classList.add('active')
+  updateCrumbs()
+  if(n===2)renderQueue()
+  if(n===4)renderSummary()
+  window.scrollTo({top:0})
+  if(!tourShown[n]) setTimeout(()=>startTour(n),600)
+}
+
+function jumpStep(n){
+  if(n<=unlockedStep)goStep(n)
+}
+
+function unlockStep(n){
+  if(n>unlockedStep)unlockedStep=n
+  updateCrumbs()
+}
+
+function updateCrumbs(){
+  for(var i=1;i<=4;i++){
+    const el=document.getElementById('sc'+i)
+    if(!el)continue
+    el.className='proto-step'
+    if(i===curStep)el.classList.add('active')
+    else if(i<curStep||i<=unlockedStep)el.classList.add('done')
+    else el.classList.add('locked')
+  }
+}
+
+// ─── STEP 1: UPLOAD ───
+function dzDrag(e,over){e.preventDefault();document.getElementById('drop-zone').classList.toggle('over',over)}
+function dzDrop(e){e.preventDefault();dzDrag(e,false);startUpload('custom')}
+
+function startUpload(type){
+  document.getElementById('sample-btn').disabled=true
+  document.getElementById('drop-zone').style.pointerEvents='none'
+  const prog=document.getElementById('up-progress')
+  const fill=document.getElementById('up-fill')
+  const lbl=document.getElementById('up-plbl')
+  prog.classList.add('on')
+  lbl.textContent=type==='sample'?'Processing drawing 40-B…':'Processing uploaded drawing…'
+  let pct=0
+  const iv=setInterval(()=>{
+    pct+=type==='sample'?5:4
+    fill.style.width=Math.min(pct,100)+'%'
+    if(pct>=100){
+      clearInterval(iv)
+      lbl.textContent='✓ Analysis complete — 452 annotations detected'
+      setTimeout(()=>{unlockStep(2);goStep(2);reviewStart=Date.now()},500)
+    }
+  },80)
+}
+
+// ─── STEP 2: FILTER & RENDER ───
+function setFilter(f){
+  activeFilter=f
+  document.querySelectorAll('.ftab').forEach(t=>{
+    t.className='ftab'
+    if(t.dataset.f===f){
+      const map={all:'fa',high:'fh',med:'fm',low:'fl',flag:'ff'}
+      t.classList.add(map[f]||'fa')
+      t.setAttribute('aria-selected','true')
+    } else {
+      t.setAttribute('aria-selected','false')
+    }
+  })
+  renderQueue()
+}
+
+function getFiltered(){
+  const f=activeFilter
+  return ITEMS.filter(it=>{
+    if(f==='all')return true
+    if(f==='high')return it.risk==='high'
+    if(f==='med')return it.risk==='med'
+    if(f==='low')return it.risk==='low'
+    if(f==='flag')return reviews[it.id]==='flagged'
+    return true
+  })
+}
+
+function renderQueue(){
+  const list=getFiltered()
+  const grid=document.getElementById('items-grid')
+  const empty=document.getElementById('q-empty')
+  grid.innerHTML=''
+  if(!list.length){empty.style.display='block';return}
+  empty.style.display='none'
+  list.forEach((it,idx)=>{
+    const st=reviews[it.id]
+    const rclass=it.risk==='high'?'ih':it.risk==='med'?'im':'il'
+    const rtext=it.risk==='high'?'HIGH RISK':it.risk==='med'?'MEDIUM':'LOW'
+    const rpclass=it.risk==='high'?'rh':it.risk==='med'?'rm':'rl'
+    const cclass=it.risk==='high'?'ch':it.risk==='med'?'cm':'cl'
+    const cwidth=it.conf+'%'
+    const sbadge=st?`<span class="ic-sbadge s${st[0]}">${st.toUpperCase()}</span>`:''
+    const card=document.createElement('div')
+    card.className=`ic ${rclass}${st?' done':''}${idx===selectedIdx?' sel':''}`
+    card.setAttribute('role','listitem')
+    card.setAttribute('aria-label',`${it.id}, ${it.name}, ${it.risk} risk, $${it.val.toLocaleString()}`)
+    card.setAttribute('tabindex','0')
+    card.dataset.idx=idx
+    card.innerHTML=`
+      ${sbadge}
+      <div class="ic-top">
+        <div><div class="ic-id">${it.id}</div><div class="ic-desc">${it.name} · ${it.loc}</div></div>
+        <div class="ic-right">
+          <div class="ic-val">$${it.val.toLocaleString()}</div>
+          <span class="rpill ${rpclass}">${rtext}</span>
+        </div>
+      </div>
+      <div class="conf-row">
+        <span class="conf-lbl">AI conf <span class="ii" data-tip="ai-conf" tabindex="0" role="button" aria-label="What is AI confidence?">i</span></span>
+        <div class="conf-track"><div class="conf-bar ${cclass}" style="width:${cwidth}"></div></div>
+        <span class="conf-pct ${cclass}">${it.conf}%</span>
+      </div>`
+    card.onclick=()=>openDetail(ITEMS.indexOf(it))
+    card.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')openDetail(ITEMS.indexOf(it))}
+    grid.appendChild(card)
+  })
+  updateProgress()
+  updateFlagCount()
+  // Show complete button after 3+ reviews
+  const cb=document.getElementById('complete-btn')
+  cb.style.display=Object.keys(reviews).length>=3?'block':'none'
+}
+
+function updateProgress(){
+  const done=Object.keys(reviews).length
+  const total=452, base=41
+  const pct=Math.round(((done+base)/total)*100)
+  const highDone=ITEMS.filter(it=>it.risk==='high'&&reviews[it.id]).length
+  const highRem=ITEMS.filter(it=>it.risk==='high').length-highDone
+  document.getElementById('q-prog-fill').style.width=pct+'%'
+  document.getElementById('q-prog-lbl').textContent=`${base+done} of ${total} reviewed · ${pct}% · ${highRem} high-risk remaining`
+}
+
+function updateFlagCount(){
+  const f=Object.values(reviews).filter(v=>v==='flagged').length
+  const fc=document.getElementById('fc')
+  if(fc)fc.textContent=f
+}
+
+function checkComplete(){
+  const highDone=ITEMS.filter(it=>it.risk==='high'&&reviews[it.id]).length===ITEMS.filter(it=>it.risk==='high').length
+  if(highDone||Object.keys(reviews).length>=3){
+    unlockStep(4);goStep(4)
+  } else {
+    showToast('Review all High Risk items first, or continue reviewing.')
+  }
+}
+
+// ─── STEP 3: DETAIL VIEW ───
+function openDetail(globalIdx){
+  curDetailId=ITEMS[globalIdx]?.id
+  if(!curDetailId)return
+  unlockStep(3)
+  goStep(3)
+  renderDetail()
+}
+
+function renderDetail(){
+  const it=ITEMS.find(i=>i.id===curDetailId)
+  if(!it)return
+  const gi=ITEMS.indexOf(it)
+  const st=reviews[it.id]
+
+  document.getElementById('dv-id-crumb').textContent=it.id
+  document.getElementById('dv-id').textContent=it.id
+  document.getElementById('dv-sub').textContent=`${it.name} · ${it.loc}`
+  document.getElementById('dv-val').textContent='$'+it.val.toLocaleString()
+
+  const riskEl=document.getElementById('dv-risk')
+  riskEl.textContent=it.risk==='high'?'HIGH RISK':it.risk==='med'?'MEDIUM':'LOW'
+  riskEl.className='rpill '+(it.risk==='high'?'rh':it.risk==='med'?'rm':'rl')
+
+  // Table
+  const tbl=document.getElementById('dv-tbl')
+  tbl.innerHTML=`
+    <tr><td>Qty</td><td>1 unit</td></tr>
+    <tr><td>Type</td><td>${it.name}</td></tr>
+    <tr><td>Location</td><td>${it.loc}</td></tr>
+    <tr><td>Est. Value</td><td>$${it.val.toLocaleString()} <span class="ii" data-tip="est-val">i</span></td></tr>
+    <tr><td>AI Confidence</td><td>${it.conf}% — ${it.risk==='high'?'High Risk':it.risk==='med'?'Medium':'Low'} <span class="ii" data-tip="ai-conf">i</span></td></tr>`
+
+  // Flag
+  const flagBox=document.getElementById('dv-flag')
+  const flagTxt=document.getElementById('dv-flag-txt')
+  if(it.flag){flagBox.style.display='block';flagTxt.textContent=it.flag}
+  else{flagBox.style.display='none'}
+
+  // Schedule
+  const sb=document.getElementById('dv-sched-body')
+  if(it.sched&&it.sched.length){
+    sb.innerHTML=it.sched.map(r=>`<tr class="${r.s==='rev'?'rev':''}"><td>${r.u}</td><td class="${r.s==='rev'?'revtag':'match'}">${r.s==='rev'?'← Reviewing':'✓ Match'}</td></tr>`).join('')
+    document.getElementById('dv-sched').style.display='table'
+  } else {
+    document.getElementById('dv-sched').style.display='none'
+  }
+
+  // Action buttons
+  const dis=!!st
+  document.getElementById('btn-acc').disabled=dis
+  document.getElementById('btn-cor').disabled=dis
+  document.getElementById('btn-flg').disabled=dis
+
+  // Done banner
+  const banner=document.getElementById('dv-done-banner')
+  if(st){banner.textContent=st==='accepted'?'✓ Accepted':st==='corrected'?'✏ Correction saved':'⚑ Flagged for review';banner.classList.add('on')}
+  else{banner.classList.remove('on')}
+
+  // Nav buttons
+  document.getElementById('dv-prev').disabled=gi===0
+  document.getElementById('dv-next').disabled=gi===ITEMS.length-1
+
+  // Drawing
+  renderDrawing(it)
+
+  // Re-bind tooltips
+  bindTooltips()
+}
+
+function dvNav(dir){
+  const gi=ITEMS.findIndex(i=>i.id===curDetailId)
+  const next=ITEMS[gi+dir]
+  if(next){curDetailId=next.id;renderDetail()}
+}
+
+function doAction(action){
+  if(!curDetailId)return
+  reviews[curDetailId]=action
+  renderDetail()
+  updateProgress()
+  updateFlagCount()
+  // Auto-advance to next unreviewed HIGH risk
+  const gi=ITEMS.findIndex(i=>i.id===curDetailId)
+  const next=ITEMS.slice(gi+1).find(i=>i.risk==='high'&&!reviews[i.id])
+  if(next){
+    setTimeout(()=>{curDetailId=next.id;renderDetail()},350)
+  }
+  // Show complete btn
+  if(Object.keys(reviews).length>=3){
+    const cb=document.getElementById('complete-btn')
+    if(cb)cb.style.display='block'
+  }
+  // Auto go to step 4 if all high risk done
+  const allHighDone=ITEMS.filter(i=>i.risk==='high').every(i=>reviews[i.id])
+  if(allHighDone) setTimeout(()=>{unlockStep(4);goStep(4)},600)
+}
+
+// ─── DRAWING SVG ───
+function renderDrawing(it){
+  const svg=document.getElementById('drawing-svg')
+  // Grid pattern
+  let d=`<defs><pattern id="gr" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0L0 0 0 24" fill="none" stroke="#c8d5e0" stroke-width=".5"/></pattern></defs>`
+  d+=`<rect width="600" height="340" fill="url(#gr)"/>`
+  // Structural lines
+  d+=`<line x1="0" y1="170" x2="600" y2="170" stroke="#9fb6c8" stroke-width="1.5"/>`
+  d+=`<line x1="300" y1="0" x2="300" y2="340" stroke="#9fb6c8" stroke-width="1.5"/>`
+  d+=`<line x1="0" y1="85" x2="600" y2="85" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="0" y1="255" x2="600" y2="255" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="150" y1="0" x2="150" y2="340" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="450" y1="0" x2="450" y2="340" stroke="#c8d5e0" stroke-width="1"/>`
+
+  // Grid labels
+  for(var r=0;r<3;r++)for(var c=0;c<4;c++){
+    const x=c*150+6,y=r*113+12
+    d+=`<text x="${x}" y="${y}" font-size="9" fill="#94a3b8" font-family="Inter,sans-serif">${String.fromCharCode(65+r)}${c+1}</text>`
+  }
+
+  // Adjacent item (amber dashed)
+  d+=`<rect x="180" y="120" width="90" height="75" fill="rgba(245,158,11,.06)" stroke="${'#f59e0b'}" stroke-width="1.5" stroke-dasharray="5 3" rx="3"/>`
+  d+=`<text x="184" y="114" font-size="9" fill="#b45309" font-weight="600" font-family="Inter,sans-serif">adj. unit</text>`
+
+  // Primary item (red solid)
+  d+=`<rect x="230" y="130" width="110" height="80" fill="rgba(220,38,38,.07)" stroke="${'#dc2626'}" stroke-width="2.5" rx="3"/>`
+  d+=`<text x="234" y="220" font-size="10" fill="#dc2626" font-weight="700" font-family="Inter,sans-serif">${it.id} detected</text>`
+
+  // Grid label
+  d+=`<text x="240" y="148" font-size="9" fill="#dc2626" font-family="Inter,sans-serif">Grid C-7 · ${it.loc}</text>`
+
+  // Duct lines
+  d+=`<line x1="150" y1="170" x2="230" y2="170" stroke="#7c93a8" stroke-width="3"/>`
+  d+=`<line x1="340" y1="170" x2="450" y2="170" stroke="#7c93a8" stroke-width="3"/>`
+  d+=`<line x1="285" y1="85" x2="285" y2="130" stroke="#7c93a8" stroke-width="3"/>`
+
+  svg.innerHTML=d
+}
+
+// ─── STEP 4: SUMMARY ───
+function renderSummary(){
+  const accepted=Object.values(reviews).filter(v=>v==='accepted').length
+  const corrected=Object.values(reviews).filter(v=>v==='corrected').length
+  const flagged=Object.values(reviews).filter(v=>v==='flagged').length
+  const total=Object.keys(reviews).length
+  const elapsed=reviewStart?Math.round((Date.now()-reviewStart)/60000):0
+  const highCleared=ITEMS.filter(i=>i.risk==='high'&&reviews[i.id]).length
+
+  // Stats
+  document.getElementById('sum-stats').innerHTML=`
+    <div class="ss"><div class="ss-val">${total}</div><div class="ss-lbl">Items reviewed</div></div>
+    <div class="ss"><div class="ss-val">${elapsed||'—'}</div><div class="ss-lbl">Minutes elapsed</div></div>
+    <div class="ss"><div class="ss-val">${highCleared} of ${ITEMS.filter(i=>i.risk==='high').length}</div><div class="ss-lbl">High-risk cleared</div></div>
+    <div class="ss"><div class="ss-val">${total?Math.round(accepted/total*100):0}%</div><div class="ss-lbl">Acceptance rate</div></div>`
+
+  // Donut
+  drawDonut(accepted,corrected,flagged)
+
+  // Table
+  const tbody=document.getElementById('rev-tbody')
+  tbody.innerHTML=Object.entries(reviews).map(([id,st])=>{
+    const it=ITEMS.find(i=>i.id===id)
+    if(!it)return''
+    return`<tr><td><b>${it.id}</b></td><td>${it.name}</td><td>$${it.val.toLocaleString()}</td><td><span class="schip s${st[0]}">${st.toUpperCase()}</span></td></tr>`
+  }).join('')
+
+  document.getElementById('sum-sub').textContent=`${total} item${total!==1?'s':''} reviewed${elapsed>0?' in '+elapsed+' min':''}.`
+}
+
+function drawDonut(a,c,f){
+  const total=a+c+f
+  const svg=document.getElementById('donut-svg')
+  const leg=document.getElementById('donut-legend')
+  const R=52,cx=70,cy=70,stroke=20
+  const circ=2*Math.PI*R
+
+  if(!total){
+    svg.innerHTML=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" fill="#94a3b8" font-family="Inter,sans-serif">0</text>`
+    leg.innerHTML=''
+    return
+  }
+
+  const segs=[
+    {val:a,color:'#16a34a',label:'Accepted'},
+    {val:c,color:'#2563eb',label:'Corrected'},
+    {val:f,color:'#dc2626',label:'Flagged'},
+  ]
+  let offset=0
+  let circles=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"/>`
+  segs.forEach(s=>{
+    if(!s.val)return
+    const len=(s.val/total)*circ
+    circles+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`
+    offset+=len
+  })
+  circles+=`<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="22" font-weight="800" fill="#0f172a" font-family="Inter,sans-serif">${total}</text>`
+  circles+=`<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="Inter,sans-serif">reviewed</text>`
+  svg.innerHTML=circles
+
+  leg.innerHTML=segs.map(s=>`
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${s.color}"></div>
+      <div class="dl-label">${s.label}</div>
+      <div class="dl-count">${s.val}</div>
+    </div>`).join('')
+}
+
+function doExport(type){
+  showToast(`BoQ exported as ${type.toUpperCase()} — feature is illustrative in this demo.`)
+  if(!tourShown[4]) startTour(4)
+}
+
+function resetAll(){
+  reviews={}
+  curDetailId=null
+  reviewStart=null
+  curStep=1
+  unlockedStep=1
+  tourShown={1:false,2:false,3:false,4:false}
+  // Reset upload UI
+  document.getElementById('sample-btn').disabled=false
+  document.getElementById('drop-zone').style.pointerEvents=''
+  document.getElementById('up-progress').classList.remove('on')
+  document.getElementById('up-fill').style.width='0'
+  goStep(1)
+  if(!tourShown[1]) setTimeout(()=>startTour(1),600)
+}
+
+// ─── KEYBOARD ───
+document.addEventListener('keydown',e=>{
+  if(tourActive){
+    if(e.key==='Escape')endTour()
+    if(e.key==='ArrowRight'||e.key==='Enter'){if(document.getElementById('tour-next-btn')===document.activeElement)return;tourNext()}
+    return
+  }
+  if(curView!=='proto')return
+  if(curStep===2){
+    const filtered=getFiltered()
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault()
+      selectedIdx=Math.max(0,Math.min(filtered.length-1,selectedIdx+(e.key==='ArrowDown'?1:-1)))
+      renderQueue()
+      // scroll selected into view
+      const cards=document.querySelectorAll('#items-grid .ic')
+      if(cards[selectedIdx])cards[selectedIdx].scrollIntoView({block:'nearest',behavior:'smooth'})
+    }
+    if(e.key==='Enter'){const filtered2=getFiltered();if(filtered2[selectedIdx]){openDetail(ITEMS.indexOf(filtered2[selectedIdx]))}}
+    if(e.key==='a'||e.key==='A'){if(document.activeElement.tagName!=='INPUT'){const f=getFiltered();const sel=f[selectedIdx];if(sel&&!reviews[sel.id]){curDetailId=sel.id;doAction('accepted')}}}
+  }
+  if(curStep===3){
+    if(e.key==='a'||e.key==='A')doAction('accepted')
+    if(e.key==='c'||e.key==='C')doAction('corrected')
+    if(e.key==='f'||e.key==='F')doAction('flagged')
+    if(e.key==='ArrowLeft')dvNav(-1)
+    if(e.key==='ArrowRight')dvNav(1)
+    if(e.key==='Escape')goStep(2)
+  }
+})
+
+// ─── TOOLTIPS ───
+const tipEl=document.getElementById('tip')
+function bindTooltips(){
+  document.querySelectorAll('[data-tip]').forEach(el=>{
+    el.onmouseenter=()=>showTip(el)
+    el.onmouseleave=hideTip
+    el.onfocus=()=>showTip(el)
+    el.onblur=hideTip
+  })
+}
+function showTip(el){
+  const key=el.getAttribute('data-tip')
+  const txt=TIPS[key]
+  if(!txt)return
+  tipEl.textContent=txt
+  const r=el.getBoundingClientRect()
+  const tipW=240,tipH=80
+  let left=r.left+r.width/2-tipW/2
+  let top=r.top-tipH-8
+  if(left<8)left=8
+  if(left+tipW>window.innerWidth-8)left=window.innerWidth-tipW-8
+  if(top<8)top=r.bottom+8
+  tipEl.style.left=left+'px'
+  tipEl.style.top=top+'px'
+  tipEl.classList.add('on')
+}
+function hideTip(){tipEl.classList.remove('on')}
+
+// ─── TOUR ───
+const TOUR_DATA={
+  1:[{el:null,h:'Welcome to the prototype',p:'This is a 4-step interactive demo of Beam AI\'s Quick Review Workflow. Start by uploading a drawing — or click "Use sample drawing" for an instant demo.',btn:'Get started'}],
+  2:[
+    {el:'q-prog-fill',h:'Risk-first ordering',p:'Annotations are sorted by risk level then dollar value — the costliest uncertain items surface first. High Risk items (61–74% confidence) always appear at the top.',btn:'Next →'},
+    {el:'tour-filters',h:'Filter tabs',p:'Use filters to focus on High Risk, Medium, or Flagged items. "Flagged" count updates as you work through the queue.',btn:'Next →'},
+    {el:'tour-kbhint',h:'Keyboard shortcuts',p:'Use ↑↓ to navigate the queue, Enter to open an item, and A/C/F to act on it directly — no mouse required for most reviews.',btn:'Start reviewing'},
+  ],
+  3:[
+    {el:'dv-flag',h:'Flag reasons',p:'Whenever the AI detects something uncertain — an overlap, a revision cloud, a size mismatch — the reason is surfaced here. This is the most important card in the view.',btn:'Next →'},
+    {el:'drawing-svg',h:'Drawing context',p:'The annotation is shown in context on the drawing. In production this renders the actual PDF page. Here it\'s illustrative.',btn:'Next →'},
+    {el:'tour-actions',h:'Action buttons',p:'Accept if it looks correct. Correct if you know the right value. Flag if you need a second opinion. Keyboard: A / C / F.',btn:'Start reviewing'},
+  ],
+  4:[{el:'tour-export',h:'Export gate',p:'Once High Risk items are cleared and coverage exceeds 60%, export unlocks. This prevents BoQs from being submitted before a meaningful review is complete. <span class="ii" data-tip="rev-complete" style="cursor:help">i</span>',btn:'Done'}],
+}
+
+function startTour(step){
+  const stops=TOUR_DATA[step]
+  if(!stops||tourShown[step])return
+  tourShown[step]=true
+  tourActive=true
+  tourStops=stops
+  tourIdx=0
+  document.getElementById('tour').classList.add('on')
+  showTourStop(0)
+}
+
+function showTourStop(idx){
+  const stop=tourStops[idx]
+  if(!stop)return endTour()
+  document.getElementById('tour-h').textContent=stop.h
+  document.getElementById('tour-p').innerHTML=stop.p
+  document.getElementById('tour-next-btn').textContent=stop.btn||'Next →'
+  document.getElementById('tour-prog').textContent=`${idx+1} / ${tourStops.length}`
+  positionTourSpot(stop.el)
+  bindTooltips()
+}
+
+function positionTourSpot(elId){
+  const spot=document.getElementById('tour-spot')
+  const tip=document.getElementById('tour-tip')
+  if(!elId){
+    spot.style.cssText='width:0;height:0;top:50%;left:50%;'
+    tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%);'
+    return
+  }
+  const el=document.getElementById(elId)
+  if(!el){spot.style.cssText='width:0;height:0;top:50%;left:50%;';tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%)';return}
+  const r=el.getBoundingClientRect()
+  const pad=8
+  spot.style.cssText=`top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;`
+  // Position tip
+  const tipW=300,tipH=180
+  let tipTop=r.bottom+pad+12
+  let tipLeft=r.left
+  if(tipTop+tipH>window.innerHeight-20)tipTop=r.top-tipH-12
+  if(tipLeft+tipW>window.innerWidth-20)tipLeft=window.innerWidth-tipW-20
+  if(tipLeft<12)tipLeft=12
+  tip.style.cssText=`top:${tipTop}px;left:${tipLeft}px;transform:none;`
+}
+
+function tourNext(){
+  tourIdx++
+  if(tourIdx>=tourStops.length)return endTour()
+  showTourStop(tourIdx)
+}
+function endTour(){
+  tourActive=false
+  document.getElementById('tour').classList.remove('on')
+}
+
+// ─── TOAST ───
+function showToast(msg,dur=3500){
+  const t=document.getElementById('toast')
+  document.getElementById('toast-msg').textContent=msg
+  t.classList.add('on')
+  setTimeout(()=>t.classList.remove('on'),dur)
+}
+
+// ─── DRAG & DROP ───
+document.addEventListener('dragover',e=>e.preventDefault())
+
+// ─── INIT ───
+bindTooltips()
+setupIntersection()
+// Start on CS view
+showView('cs')
+// Auto-start tour on first load
+setTimeout(()=>{if(curView==='cs'){}},1000)
+</script>
 </body>
 </html>
