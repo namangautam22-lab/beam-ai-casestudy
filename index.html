@@ -7,11 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ASSUMPTIONS (state in code):
-   1. 8 sample items are fabricated for demo — real data from Beam AI pipeline
+   1. 8 sample items are fabricated for demo, real data from Beam AI pipeline
    2. Dollar values use RSMeans 2024 HVAC reference, not live feeds
-   3. Confidence scores are illustrative — real scores from Beam ML model
+   3. Confidence scores are illustrative, real scores from Beam ML model
    4. Demo threshold = all items actioned; production = all HIGH + 60% overall
-   5. CSV/PDF export is client-side only — production would use server-side signed docs
+   5. CSV export is client-side only, production would use server-side signed docs
 */
 :root{--navy:#1a2332;--blue:#2563eb;--red:#dc2626;--orange:#f59e0b;--green:#16a34a;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;--r12:12px;--r8:8px;--shadow:0 1px 3px rgba(0,0,0,.08);--t:.2s ease}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -473,8 +473,6 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <button class="proto-step locked" id="sc2" onclick="jumpStep(2)">Step 2</button>
         <span class="proto-step-dot">·</span>
         <button class="proto-step locked" id="sc3" onclick="jumpStep(3)">Step 3</button>
-        <span class="proto-step-dot">·</span>
-        <button class="proto-step locked" id="sc4" onclick="jumpStep(4)">Step 4</button>
       </div>
     </div>
     <div class="nav-right">
@@ -517,9 +515,9 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <section id="s1" class="section" style="background:var(--g50)">
   <div class="container">
     <span class="section-label">Frame the Problem</span>
-    <h2 class="section-title">The estimator's real problem isn't speed — it's knowing when to stop</h2>
-    <p class="section-body">Beam AI surfaces hundreds of annotations per drawing. The AI does the detection. But the estimator still carries the professional risk. If something is wrong in the exported BoQ, it's their name on it — not the model's.</p>
-    <p class="section-body" style="margin-top:-20px">The result: estimators either check everything (slow, unsustainable) or check selectively and absorb personal liability for what they missed. What's missing isn't a better list. It's a defensible stopping point — a system that tells them they've covered enough high-risk surface area to sign off with confidence.</p>
+    <h2 class="section-title">The estimator's real problem is knowing when to stop</h2>
+    <p class="section-body">Beam AI surfaces hundreds of annotations per drawing. The AI handles detection. But the estimator carries the professional risk. If the exported BoQ is wrong, it's their name on it.</p>
+    <p class="section-body" style="margin-top:-20px">The result: estimators either check everything (slow) or check selectively and absorb personal liability for what they missed. What's missing is a defensible stopping point — a system that says they've covered enough high-risk surface area to sign off.</p>
 
     <div class="persona-card">
       <div class="persona-avatar" aria-hidden="true">MC</div>
@@ -536,15 +534,15 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 
     <div class="jtbd-grid">
       <div class="jtbd eff">
-        <div class="jtbd-lbl">JTBD — Efficiency</div>
+        <div class="jtbd-lbl">JTBD: Efficiency</div>
         <div class="jtbd-q">"Identify which items are most likely wrong so I can verify those first."</div>
       </div>
       <div class="jtbd conf">
-        <div class="jtbd-lbl">JTBD — Confidence</div>
+        <div class="jtbd-lbl">JTBD: Confidence</div>
         <div class="jtbd-q">"Feel confident enough to export without wondering if I missed something."</div>
       </div>
       <div class="jtbd acct">
-        <div class="jtbd-lbl">JTBD — Accountability</div>
+        <div class="jtbd-lbl">JTBD: Accountability</div>
         <div class="jtbd-q">"Have a record of what I checked and why I approved it, so if something goes wrong in the field, I can show my work."</div>
       </div>
     </div>
@@ -603,24 +601,24 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
   <div class="container">
     <span class="section-label">Success Metrics</span>
     <h2 class="section-title">How we'll know it's working</h2>
-    <p class="section-body">Three measurable outcomes with clear targets, instrumentation plans, and honest baselines — including where data doesn't exist yet.</p>
+    <p class="section-body">Three measurable outcomes with clear targets, instrumentation plans, and honest baselines, including where data doesn't exist yet.</p>
     <div class="metrics-grid">
       <div class="mc blue">
         <div class="mc-lbl">Review Completion Time</div>
         <div class="mc-target">&lt;25 min <span class="ii" data-tip="m-time"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
-        <div class="mc-note">Per 40-sheet drawing · Baseline: 90 min</div>
+        <div class="mc-note">Baseline: 90 min (interview-reported). Target: under 25 min.</div>
         <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Session duration from first annotation opened → export click. Server-side per session.</div>
       </div>
       <div class="mc green">
         <div class="mc-lbl">AI Acceptance Rate</div>
         <div class="mc-target">&gt;82% <span class="ii" data-tip="m-accept"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
-        <div class="mc-note">Without correction · No baseline yet</div>
+        <div class="mc-note">Baseline: TBD — no instrumentation exists yet. Target: over 82%.</div>
         <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Accept actions ÷ total actioned items per session. Broken down by item type and floor.</div>
       </div>
       <div class="mc amber">
         <div class="mc-lbl">Post-Export Error Rate</div>
         <div class="mc-target">&lt;1.5% <span class="ii" data-tip="m-error"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
-        <div class="mc-note">Quantity discrepancy · Baseline assumed</div>
+        <div class="mc-note">Baseline: TBD — based on estimator recall, not instrumented. Target: under 1.5%.</div>
         <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Flagged field corrections ÷ total items exported. Requires field verification integration (Phase 3).</div>
       </div>
     </div>
@@ -632,7 +630,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
   <div class="container">
     <span class="section-label" style="background:#fee2e2;color:var(--red)">Impact</span>
     <h2 class="section-title">Before Quick Review / After Quick Review</h2>
-    <p class="section-body">The workflow change is additive — no new ML, no new data pipeline. Only the review interface changes.</p>
+    <p class="section-body">The workflow change is additive, no new ML, no new data pipeline. Only the review interface changes.</p>
     <div class="ba-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
       <div style="background:#FEF2F2;border:1px solid #fecaca;border-radius:var(--r12);padding:28px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red);margin-bottom:16px">Before</div>
@@ -640,13 +638,13 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <div class="ba-row"><span class="ba-x">✗</span><span>No signal on which items need attention</span></div>
         <div class="ba-row"><span class="ba-x">✗</span><span>Context switching between Beam output and equipment schedule</span></div>
         <div class="ba-row"><span class="ba-x">✗</span><span>BoQ exported with uncertainty ("caveat email")</span></div>
-        <div class="ba-row"><span class="ba-x">✗</span><span>Rework requests from field — avg $38,400 correction</span></div>
+        <div class="ba-row"><span class="ba-x">✗</span><span>Rework requests from field, avg $38,400 correction</span></div>
       </div>
       <div style="background:#F0FDF4;border:1px solid #bbf7d0;border-radius:var(--r12);padding:28px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green);margin-bottom:16px">After</div>
         <div class="ba-row"><span class="ba-c">✓</span><span>Review time: under 25 min (target)</span></div>
         <div class="ba-row"><span class="ba-c">✓</span><span>High-risk items surfaced automatically, ranked by value × confidence</span></div>
-        <div class="ba-row"><span class="ba-c">✓</span><span>Drawing context inline — no tab switching</span></div>
+        <div class="ba-row"><span class="ba-c">✓</span><span>Drawing context inline, no tab switching</span></div>
         <div class="ba-row"><span class="ba-c">✓</span><span>Export gated until high-risk queue cleared</span></div>
         <div class="ba-row"><span class="ba-c">✓</span><span>Post-export error rate target: under 1.5%</span></div>
       </div>
@@ -658,7 +656,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <section id="s3" class="section" style="background:#fff">
   <div class="container">
     <span class="section-label">Solution Architecture</span>
-    <h2 class="section-title">Four-layer architecture</h2>
+    <h2 class="section-title">Three-layer architecture</h2>
     <p class="section-body">Each layer builds on the last. The key constraint: no new ML models. Everything surfaces what Beam already computes.</p>
     <div class="pipeline">
       <div class="pl-step"><div class="pl-card blue"><div class="pl-icon">🎯</div><div class="pl-name">Layer 1: Confidence Engine</div><div class="pl-desc">Scores each annotation 0–100 based on symbol clarity, bounding box overlap, drawing scale consistency, and historical accuracy for that item type.</div></div></div>
@@ -666,24 +664,19 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
       <div class="pl-step"><div class="pl-card amber"><div class="pl-icon">⚡</div><div class="pl-name">Layer 2: Risk Prioritizer</div><div class="pl-desc">Combines confidence score, estimated dollar value, and item rarity into a ranked queue. Low confidence + high value = top of queue.</div></div></div>
       <div class="pl-arrow" aria-hidden="true">→</div>
       <div class="pl-step"><div class="pl-card green"><div class="pl-icon">✓</div><div class="pl-name">Layer 3: Quick Review UX</div><div class="pl-desc">Keyboard-first interface surfaces drawing context inline. Progress bar and export gating prevent premature BoQ submission.</div></div></div>
-      <div class="pl-arrow" aria-hidden="true">→</div>
-      <div class="pl-step"><div class="pl-card slate"><div class="pl-icon">↩</div><div class="pl-name">Layer 4: Calibration Signal</div><div class="pl-desc">When a flagged item gets corrected in the field, that event adjusts confidence weights for that item type on future drawings. This is what separates a learning system from a static sort.</div></div></div>
-    </div>
-    <div class="pl-feedback">
-      <strong>↩ Feedback loop:</strong> Layer 4 feeds back into Layer 1 over time — confidence weights adjust as field corrections accumulate. Without field integration, Layer 4 is inactive and scores are fixed at model training time.
     </div>
     <div class="tradeoff">
       <div class="tradeoff-lbl">Key Trade-off</div>
-      <p>False positives are acceptable. Cost of an unnecessary check: ~10 seconds. Cost of a missed AHU miscount: $40,000+. The system biases toward over-flagging.</p>
-      <p style="margin-top:10px">Without field feedback integration, confidence scores are static. Useful on day one — but calibration over time is what makes the system defensible at 6 months.</p>
+      <p>False positives are acceptable. Cost of unnecessary check: ~10 seconds. Cost of missed AHU: $40,000+. System biases toward over-flagging. If estimators show frustration with false positives, lower the HIGH threshold from 75% to 65% confidence and monitor acceptance rate.</p>
+      <p style="margin-top:10px">Without field integration, confidence scores remain static, manual correction logs in Phase 2 serve as the interim calibration mechanism.</p>
     </div>
     <div class="assumptions">
-      <h4>Assumptions — stated explicitly</h4>
+      <h4>Assumptions: stated explicitly</h4>
       <ol>
         <li>Confidence scores already exist in Beam's ML pipeline. This is a UI surface change, not a new model.</li>
         <li>Dollar values come from RSMeans 2024 HVAC reference data, not live quote feeds.</li>
         <li>"Review complete" ≠ 100% coverage. Threshold: all High-Risk items cleared + 60% overall.</li>
-        <li>The feedback loop (Layer 4) requires field integration. Until that exists, confidence scores are fixed at model training time. <strong>[ASSUMPTION — this is the single biggest architectural dependency in the system.]</strong></li>
+        <li>Confidence scores are static until field integration exists. Manual correction logs in Phase 2 act as a proxy signal. <strong>[ASSUMPTION: explicitly unvalidated until Phase 1 data exists.]</strong></li>
       </ol>
     </div>
   </div>
@@ -739,7 +732,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
             <table class="wf-dt">
               <tr><td>Qty</td><td>1 unit</td></tr><tr><td>Type</td><td>Rooftop Package</td></tr><tr><td>Capacity</td><td>20 Ton</td></tr><tr><td>Est. Value</td><td>$38,400</td></tr>
             </table>
-            <div class="wf-flag">⚠ Overlapping bounding box with AHU-02 — possible double-count. Verify equipment schedule.</div>
+            <div class="wf-flag">⚠ Overlapping bounding box with AHU-02, possible double-count. Verify equipment schedule.</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
               <div class="wf-act wf-act-a" style="padding:5px 10px">✓ Accept [A]</div>
               <div class="wf-act wf-act-c" style="padding:5px 10px">✏ Correct [C]</div>
@@ -750,13 +743,13 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
             <span><kbd>A</kbd> Accept</span><span><kbd>C</kbd> Correct</span><span><kbd>F</kbd> Flag</span><span><kbd>←→</kbd> Navigate</span><span><kbd>Esc</kbd> Queue</span>
           </div>
         </div>
-        <div style="margin-top:10px;padding-left:12px;border-left:3px solid var(--blue);font-size:13px;color:var(--g600);font-style:italic;line-height:1.5">Drawing context and equipment schedule inline — no context switching required.</div>
+        <div style="margin-top:10px;padding-left:12px;border-left:3px solid var(--blue);font-size:13px;color:var(--g600);font-style:italic;line-height:1.5">Drawing context and equipment schedule inline, no context switching required.</div>
       </div>
     </div>
     <div style="margin-top:48px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--r12);padding:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
       <div>
         <div style="font-size:20px;font-weight:700;color:var(--g900);margin-bottom:6px">See this as a working prototype →</div>
-        <div style="font-size:15px;color:var(--g600)">The queue, detail view, and export flow — interactive, step by step.</div>
+        <div style="font-size:15px;color:var(--g600)">The queue, detail view, and export flow, interactive, step by step.</div>
       </div>
       <button class="btn btn-blue" onclick="openProto()" style="flex-shrink:0">Open Prototype</button>
     </div>
@@ -774,16 +767,16 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <div class="rc-hdr v0"><span class="rc-ver">Phase 1</span><span class="rc-time">Weeks 1–3</span></div>
         <div class="rc-body">
           <div class="rc-phase">Signal Only</div>
-          <div class="rc-scope">Add confidence score badge to existing annotation list. No reordering. No new UI chrome. Ships as a feature flag to 2 beta estimators.</div>
+          <div class="rc-scope">Add confidence badge to existing annotation list. No reordering. Feature flag to 2 beta estimators.</div>
           <div class="rc-mlbl">Exit criterion</div>
-          <div class="rc-mval">Estimators can describe, unprompted, which items are high-confidence vs low-confidence. Validated by session recording.</div>
+          <div class="rc-mval">Estimators describe unprompted which items are high vs low confidence. Validated by session recording.</div>
         </div>
       </div>
       <div class="rc">
         <div class="rc-hdr v1"><span class="rc-ver">Phase 2</span><span class="rc-time">Weeks 4–10</span></div>
         <div class="rc-body">
           <div class="rc-phase">Ranked Queue + Review Tracking</div>
-          <div class="rc-scope">Risk-prioritized list, keyboard shortcuts, progress bar, inline detail view. Export remains ungated — we observe behaviour before enforcing.</div>
+          <div class="rc-scope">Risk-ranked list, keyboard shortcuts, progress bar, inline detail view. Export ungated. Manual correction log introduced as interim calibration signal.</div>
           <div class="rc-mlbl">Exit criterion</div>
           <div class="rc-mval">Median review time under 40 min across 10 sessions. High-risk items opened before medium items in 80%+ of sessions.</div>
         </div>
@@ -791,16 +784,16 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
       <div class="rc">
         <div class="rc-hdr v2"><span class="rc-ver">Phase 3</span><span class="rc-time">Weeks 11–18</span></div>
         <div class="rc-body">
-          <div class="rc-phase">Export Gating + Post-Export Instrumentation</div>
-          <div class="rc-scope">Block BoQ export until all high-risk items actioned. Session summary on export. Flagged items routed to project lead queue. Field error tracking requires Procore or equivalent — confirm by Week 6.</div>
+          <div class="rc-phase">Export Gating + Session Summary</div>
+          <div class="rc-scope">Block export until all HIGH items actioned. Session summary shown before export. Flagged items routed to project lead. Post-export error tracking via manual logs; Procore integration if available.</div>
           <div class="rc-mlbl">Exit criterion</div>
-          <div class="rc-mval">Post-export error rate drops below 1.5% across 20+ export events.</div>
+          <div class="rc-mval">Post-export error rate under 1.5% across 20+ export events.</div>
         </div>
       </div>
     </div>
     <div class="risk-callout">
-      <div class="risk-lbl">Biggest risk: Phase 3 field integration</div>
-      <p>The biggest risk is Phase 3's field integration dependency. If Procore access isn't confirmed by Week 6, the post-export error metric can't be instrumented. <strong>Mitigation: manual field correction log as a fallback (adds 2 weeks).</strong></p>
+      <div class="risk-lbl">Phase 3 gating dependency</div>
+      <p>Phase 3 gating only ships if Phase 2 shows estimators trust the confidence ranking. If trust signals are weak, Phase 3 scope reduces to session summary only — no hard gate.</p>
     </div>
   </div>
 </section>
@@ -812,11 +805,10 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
     <h2 class="section-title">The one question that determines whether this works</h2>
     <div class="rr-card">
       <div class="rr-card-title">Are confidence scores actually calibrated?</div>
-      <p>Before building the ranked queue, run a data audit on 50 historical drawings. If a 61% confidence score and an 85% confidence score have the same real-world correction rate, the prioritization model is noise — and the entire product premise collapses.</p>
-      <p>This is not a UX risk. It's a model risk. It needs to be answered with data before a single line of interface code is written.</p>
-      <p><strong>Test:</strong> Pull correction events from existing Beam AI sessions. Does correction rate differ meaningfully (2x minimum) between low and high confidence items? If yes — build. If no — pivot to dollar-value-only prioritization, which requires no confidence signal at all.</p>
+      <p>Before building the ranked queue, audit 50 historical drawings. If 61% confidence and 85% confidence items have the same real-world correction rate, the prioritization is noise and the product premise fails.</p>
+      <p>Test: do low-confidence items get corrected at 2x the rate of high-confidence items? If yes — build. If no — pivot to dollar-value-only prioritization, no confidence signal needed.</p>
     </div>
-    <div class="rr-note">Secondary risk: export gating (Phase 3) may create friction if confidence scores aren't trusted yet. Mitigation: Phase 2 keeps export ungated — we observe behaviour before enforcing. See rollout plan.</div>
+    <div class="rr-note">Secondary risk: export gating in Phase 3 creates friction if confidence scores aren't trusted yet. Mitigation: Phase 2 keeps export ungated — observe behaviour before enforcing. Trust must be earned before gates are added.</div>
   </div>
 </section>
 
@@ -849,7 +841,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
       <div class="up-plbl" id="up-plbl">Detecting annotations on Drawing 40-B...</div>
       <div class="up-track"><div class="up-fill" id="up-fill"></div></div>
     </div>
-    <div class="up-note">In production, Beam AI processes drawings in 24–72 hours. This demo simulates an already-processed result.<br><br><em>[ASSUMPTION: The 8 sample items below are fabricated for demo purposes — real data would come from Beam AI's annotation pipeline.]</em></div>
+    <div class="up-note">In production, Beam AI processes drawings in 24–72 hours. This demo simulates an already-processed result.<br><br><em>[ASSUMPTION: The 8 sample items below are fabricated for demo purposes, real data would come from Beam AI's annotation pipeline.]</em></div>
   </div>
 </div>
 
@@ -877,7 +869,6 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
     <span class="hint-i"><kbd>A</kbd> Accept</span>
     <span class="hint-i"><kbd>C</kbd> Correct</span>
     <span class="hint-i"><kbd>F</kbd> Flag</span>
-    <button class="complete-btn" id="complete-btn" onclick="tryComplete()" disabled>Complete Review →</button>
   </div>
 </div>
 
@@ -953,36 +944,17 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
       <span class="hint-i"><kbd>Esc</kbd> Back to queue</span>
     </div>
   </div>
-</div>
-
-<!-- STEP 4 -->
-<div id="pstep4" class="proto-step-view">
-  <div class="sum-wrap">
-    <div class="sum-badge">✓ Review Complete</div>
-    <div class="sum-h">Review Complete — Drawing 40-B</div>
-    <div class="sum-sub">Here is what was covered in this session.</div>
-    <div class="sum-progress-card" id="sum-progress-card"></div>
-    <div class="tbl-wrap">
-      <table class="rev-tbl">
-        <thead><tr><th>Item ID</th><th>Type</th><th>Floor</th><th>Est. Value</th><th>AI Confidence</th><th>Status</th><th>Note</th></tr></thead>
-        <tbody id="rev-tbody"></tbody>
-      </table>
-    </div>
-    <div class="val-summary" id="val-summary"></div>
-    <div class="exp-box">
-      <div class="exp-h">Export Bill of Quantities</div>
-      <div class="exp-desc">Export generates a structured BoQ with accepted quantities, corrections logged, and flagged items marked for project lead review.</div>
-      <div class="exp-btns">
-        <button class="btn btn-green" onclick="doExport('csv')">⬇ Export BoQ as CSV</button>
-        <button class="btn btn-outline" onclick="doExport('pdf')">⬇ Export BoQ as PDF</button>
+  <!-- Export section: shown when all HIGH items actioned -->
+  <div id="export-section" style="display:none;max-width:1200px;margin:0 auto;padding:0 24px 80px">
+    <div style="border-top:2px solid var(--g200);padding-top:32px;margin-top:8px;text-align:center">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green);margin-bottom:12px">✓ All high-risk items cleared</div>
+      <div style="font-size:20px;font-weight:700;color:var(--g900);margin-bottom:6px">Export Bill of Quantities</div>
+      <div style="font-size:14px;color:var(--g600);margin-bottom:24px">CSV includes: Item ID, Type, Floor, Qty, Est. Value, AI Confidence, Status, Note</div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="doExport()">⬇ Export BoQ as CSV</button>
+        <button class="btn btn-outline" onclick="resetAll()">↺ Start New Review</button>
       </div>
-    </div>
-    <div class="assumptions" style="margin-top:20px">
-      <h4>Production note</h4>
-      <p style="font-size:14px;color:var(--g600);line-height:1.6">In production, flagged items are automatically routed to the project lead's review queue before the BoQ is finalised. This prevents unresolved items from reaching the field team.<br><br><em>[ASSUMPTION: CSV and PDF export are client-side only in this demo — production would generate server-side signed documents.]</em></p>
-    </div>
-    <div style="margin-top:28px;text-align:center">
-      <button class="btn btn-outline" onclick="resetAll()">↺ Start New Review</button>
+      <div style="margin-top:16px;font-size:13px;color:var(--g400)"><em>[ASSUMPTION: client-side export only in this demo, production would generate server-side signed documents.]</em></div>
     </div>
   </div>
 </div>
@@ -1035,7 +1007,7 @@ var activeFilter='all',selectedIdx=0
 var sessionState={} // id -> {status,correctedQty,correctedType,correctionNote,flagReason}
 var curDetailId=null,openPanel=null
 var tourActive=false,tourStops=[],tourIdx=0
-var tourShown={1:false,2:false,3:false,4:false}
+var tourShown={1:false,2:false,3:false}
 
 function initSession(){
   sessionState={}
@@ -1053,16 +1025,16 @@ const TIPS={
   'm-accept':'No baseline exists. 82% is the minimum signal threshold for the ranking to be trustworthy. Informed by analogous AI review tools.',
   'm-error':'Based on estimator recall of past rework frequency. Requires field integration to instrument properly (Phase 3 dependency).',
   'ai-conf':'How certain the AI is about this annotation. Below 75% = High Risk. Score combines symbol clarity, overlap, scale, and historical accuracy.',
-  'est-val':'RSMeans 2024 HVAC unit costs — not live pricing. Actual cost depends on project specs and vendor quotes.',
+  'est-val':'RSMeans 2024 HVAC unit costs, not live pricing. Actual cost depends on project specs and vendor quotes.',
 }
 
 function iIcon(tip){return`<span class="ii" data-tip="${tip}" tabindex="0" role="button"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span>`}
 
 function getRiskAlert(it){
   if(it.risk!=='HIGH')return null
-  if(it.id.startsWith('AHU'))return'Overlapping bounding box detected — possible double-count. Verify against equipment schedule before accepting.'
-  if(it.id.startsWith('VAV'))return`Low confidence detection — symbol may be partially obscured. Check floor plan grid ${it.floor} for clarity.`
-  if(it.id.startsWith('EF'))return'Quantity flagged — 2 units detected at same grid reference. Confirm with mechanical schedule.'
+  if(it.id.startsWith('AHU'))return'Overlapping bounding box detected, possible double-count. Verify against equipment schedule before accepting.'
+  if(it.id.startsWith('VAV'))return`Low confidence detection, symbol may be partially obscured. Check floor plan grid ${it.floor} for clarity.`
+  if(it.id.startsWith('EF'))return'Quantity flagged, 2 units detected at same grid reference. Confirm with mechanical schedule.'
   return'Low confidence score. Verify symbol match on drawing.'
 }
 
@@ -1107,7 +1079,6 @@ function goStep(n){
   const el=document.getElementById('pstep'+n);if(el)el.classList.add('active')
   updateCrumbs()
   if(n===2)renderQueue()
-  if(n===4)renderSummary()
   window.scrollTo({top:0})
   if(!tourShown[n])setTimeout(()=>startTour(n),600)
 }
@@ -1116,7 +1087,7 @@ function jumpStep(n){if(n<=unlockedStep)goStep(n)}
 function unlockStep(n){if(n>unlockedStep)unlockedStep=n;updateCrumbs()}
 
 function updateCrumbs(){
-  for(var i=1;i<=4;i++){
+  for(var i=1;i<=3;i++){
     const el=document.getElementById('sc'+i);if(!el)continue
     el.className='proto-step'+(i===curStep?' active':i<=unlockedStep?' done':' locked')
   }
@@ -1138,7 +1109,7 @@ function startUpload(type){
     fill.style.width=Math.min(pct,100)+'%'
     if(pct>=100){
       clearInterval(iv)
-      document.getElementById('up-plbl').textContent='✓ Analysis complete — 8 items ready for review'
+      document.getElementById('up-plbl').textContent='✓ Analysis complete: 8 items ready for review'
       initSession()
       setTimeout(()=>{unlockStep(2);goStep(2)},500)
     }
@@ -1211,15 +1182,9 @@ function updateProgress(){
   document.getElementById('q-prog-lbl').textContent=`${done} of ${ITEMS.length} reviewed · ${pct}%`
   document.getElementById('cnt-flag').textContent=ITEMS.filter(it=>sessionState[it.id]?.status==='Flagged').length
   const allHighDone=ITEMS.filter(it=>it.risk==='HIGH').every(it=>sessionState[it.id]?.status!=='Pending')
-  const btn=document.getElementById('complete-btn')
-  btn.disabled=!allHighDone
-  btn.title=allHighDone?'':'Clear all 5 high-risk items first.'
-}
-
-function tryComplete(){
-  const allHighDone=ITEMS.filter(it=>it.risk==='HIGH').every(it=>sessionState[it.id]?.status!=='Pending')
-  if(!allHighDone){showToast('Clear all 5 high-risk items first.');return}
-  unlockStep(4);goStep(4)
+  const expSection=document.getElementById('export-section')
+  if(expSection)expSection.style.display=allHighDone?'block':'none'
+  if(allHighDone&&curStep===3){expSection?.scrollIntoView({behavior:'smooth',block:'nearest'})}
 }
 
 // ── STEP 3 ──
@@ -1420,41 +1385,26 @@ function renderSummary(){
     <div class="vs-row"><span>Total flagged value:</span><span style="color:var(--red);font-weight:600">$${valOf(flagged).toLocaleString()} (routed to project lead)</span></div>`
 }
 
-function doExport(type){
+function doExport(){
   const today=new Date().toISOString().split('T')[0]
-  if(type==='csv'){
-    const headers=['Item ID','Type','Floor','Quantity','Unit Type','Capacity','Est. Value ($)','AI Confidence (%)','Status','Correction Note','Flag Reason']
-    const rows=ITEMS.map(it=>{
-      const st=sessionState[it.id]||{}
-      return[it.id,st.correctedType||it.type,it.floor,st.correctedQty!==null?st.correctedQty:it.qty,it.unitType,it.capacity,it.value,it.confidence+'%',st.status||'Pending',st.correctionNote||'',st.flagReason||'']
-    })
-    const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n')
-    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'})
-    const url=URL.createObjectURL(blob)
-    const a=document.createElement('a');a.href=url;a.download=`BoQ-Drawing-40B-${today}.csv`;a.click()
-    URL.revokeObjectURL(url)
-    showToast(`CSV downloaded — BoQ-Drawing-40B-${today}.csv`)
-  }else{
-    const rows=ITEMS.map(it=>{
-      const st=sessionState[it.id]||{}
-      const status=st.status||'Pending'
-      const note=st.correctionNote||(st.flagReason||'')
-      return`<tr><td>${it.id}</td><td>${st.correctedType||it.type}</td><td>${it.floor}</td><td>${st.correctedQty!==null?st.correctedQty:it.qty}</td><td>$${it.value.toLocaleString()}</td><td>${it.confidence}%</td><td>${status}</td><td>${note}</td></tr>`
-    }).join('')
-    document.getElementById('print-summary').innerHTML=`
-      <h2>BoQ Review Summary: Drawing 40-B</h2>
-      <div class="ps-meta">Beam AI · Quick Review Workflow · Exported: ${new Date().toLocaleDateString()}</div>
-      <table><thead><tr><th>Item ID</th><th>Type</th><th>Floor</th><th>Qty</th><th>Est. Value</th><th>AI Conf.</th><th>Status</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="ps-footer">Exported by: Naman Gautam — ${new Date().toLocaleDateString()} · [ASSUMPTION: client-side export only in this demo]</div>`
-    window.print()
-    showToast('Print dialog opened — save as PDF')
-  }
+  const headers=['Item ID','Type','Floor','Qty','Est. Value','AI Confidence','Status','Note']
+  const rows=ITEMS.map(it=>{
+    const st=sessionState[it.id]||{}
+    const note=(st.correctionNote||(st.flagReason||'')).trim()
+    return[it.id,st.correctedType||it.type,it.floor,st.correctedQty!==null?st.correctedQty:it.qty,'$'+it.value.toLocaleString(),it.confidence+'%',st.status||'Pending',note]
+  })
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n')
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'})
+  const url=URL.createObjectURL(blob)
+  const a=document.createElement('a');a.href=url;a.download=`BoQ-Drawing-40B-${today}.csv`;a.click()
+  URL.revokeObjectURL(url)
+  showToast(`CSV downloaded: BoQ-Drawing-40B-${today}.csv`)
 }
 
 function resetAll(){
   sessionState={};curDetailId=null;openPanel=null
   curStep=1;unlockedStep=1
-  tourShown={1:false,2:false,3:false,4:false}
+  tourShown={1:false,2:false,3:false}
   closePanel()
   document.getElementById('sample-btn').disabled=false
   document.getElementById('drop-zone').style.pointerEvents=''
@@ -1519,17 +1469,15 @@ function hideTip(){tipEl.classList.remove('on')}
 
 // ── TOUR ──
 const TOUR_DATA={
-  1:[{el:null,h:'Welcome to the prototype',p:'This is a 4-step interactive demo of Beam AI\'s Quick Review Workflow. Click "Use sample drawing" for an instant demo with pre-loaded annotation data.',btn:'Get started'}],
+  1:[{el:null,h:'Welcome to the prototype',p:'This is a 3-step interactive demo of Beam AI\'s Quick Review Workflow. Click "Use sample drawing" for an instant demo with pre-loaded annotation data.',btn:'Get started'}],
   2:[
-    {el:'q-prog-fill',h:'Risk-first ordering',p:'Items sorted by risk level then dollar value — the costliest uncertain items surface first.',btn:'Next →'},
-    {el:'items-grid',h:'Review queue',p:'Click any item to open its detail view. Use keyboard ↑↓ to navigate, Enter to open, A to accept directly from queue.',btn:'Next →'},
-    {el:'complete-btn',h:'Complete Review gate',p:'The "Complete Review" button is only enabled once all 5 HIGH risk items have been actioned. This is the exit gate.',btn:'Got it'},
+    {el:'q-prog-fill',h:'Risk-first ordering',p:'Items sorted by risk level then dollar value, the costliest uncertain items surface first.',btn:'Next →'},
+    {el:'items-grid',h:'Review queue',p:'Click any item to open its detail view. Use keyboard ↑↓ to navigate, Enter to open, A to accept directly from queue.',btn:'Got it'},
   ],
   3:[
     {el:'dv-alert',h:'Risk alert',p:'For HIGH risk items, the AI surfaces a specific reason: double-count detection, obscured symbols, or quantity mismatches. Read this before acting.',btn:'Next →'},
-    {el:'action-row',h:'Action buttons',p:'Accept (correct as-is), Correct (edit qty/type), or Flag (route for review). Keyboard: A / C / F. Esc returns to queue.',btn:'Got it'},
+    {el:'action-row',h:'Action buttons',p:'Accept (correct as-is), Correct (edit qty/type), or Flag (route for review). Keyboard: A / C / F. Esc returns to queue. Export appears once all HIGH items are cleared.',btn:'Got it'},
   ],
-  4:[{el:null,h:'Review complete',p:'The summary shows every item\'s status pulled from session state. CSV and PDF export generate real files from your session data.',btn:'Done'}],
 }
 
 function startTour(step){
