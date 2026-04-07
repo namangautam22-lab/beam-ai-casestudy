@@ -6,7 +6,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#1a2332;--blue:#2563eb;--red:#dc2626;--orange:#f59e0b;--green:#16a34a;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;--r12:12px;--r8:8px;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 16px rgba(0,0,0,.1);--t:.2s ease}
+/* ASSUMPTIONS (state in code):
+   1. 8 sample items are fabricated for demo — real data from Beam AI pipeline
+   2. Dollar values use RSMeans 2024 HVAC reference, not live feeds
+   3. Confidence scores are illustrative — real scores from Beam ML model
+   4. Demo threshold = all items actioned; production = all HIGH + 60% overall
+   5. CSV/PDF export is client-side only — production would use server-side signed docs
+*/
+:root{--navy:#1a2332;--blue:#2563eb;--red:#dc2626;--orange:#f59e0b;--green:#16a34a;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g400:#94a3b8;--g600:#475569;--g700:#334155;--g800:#1e293b;--g900:#0f172a;--r12:12px;--r8:8px;--shadow:0 1px 3px rgba(0,0,0,.08);--t:.2s ease}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.5;color:var(--g900);background:#fff;-webkit-font-smoothing:antialiased}
@@ -19,7 +26,7 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 /* Nav */
 #main-nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--navy);height:56px;display:flex;align-items:center;box-shadow:0 1px 0 rgba(255,255,255,.07)}
 .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;gap:12px}
-.nav-brand{color:#fff;font-weight:700;font-size:15px;white-space:nowrap;flex-shrink:0}
+.nav-brand{color:#fff;font-weight:700;font-size:15px;white-space:nowrap;flex-shrink:0;border:none;background:none;cursor:pointer}
 .nav-sep{color:rgba(255,255,255,.2);flex-shrink:0;font-size:13px}
 .nav-pills{display:flex;gap:2px;flex:1;overflow:hidden}
 .nav-pill{padding:5px 13px;border-radius:20px;font-size:13px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;transition:var(--t);white-space:nowrap;border:none;background:none}
@@ -29,12 +36,12 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .proto-back{color:rgba(255,255,255,.6);font-size:13px;font-weight:500;padding:5px 10px;border-radius:6px;transition:var(--t);cursor:pointer;border:none;background:none;white-space:nowrap}
 .proto-back:hover{color:#fff;background:rgba(255,255,255,.08)}
 .proto-steps{display:flex;align-items:center;gap:2px}
-.proto-step{font-size:13px;font-weight:500;padding:5px 12px;border-radius:20px;transition:var(--t);white-space:nowrap;cursor:pointer;color:rgba(255,255,255,.3);border:none;background:none}
+.proto-step{font-size:13px;font-weight:500;padding:5px 12px;border-radius:20px;transition:var(--t);white-space:nowrap;cursor:pointer;color:rgba(255,255,255,.3);border:none;background:none;min-height:32px}
 .proto-step.active{background:var(--blue);color:#fff}
 .proto-step.done{color:rgba(255,255,255,.6)}
-.proto-step.locked{cursor:default}
+.proto-step.locked{cursor:default;opacity:.4}
 .proto-step-dot{color:rgba(255,255,255,.2);font-size:11px;padding:0 2px}
-.nav-cta{flex-shrink:0;padding:6px 14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:var(--t)}
+.nav-cta{flex-shrink:0;padding:6px 14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:var(--t);min-height:36px}
 .nav-cta:hover{background:rgba(255,255,255,.14);color:#fff}
 .nav-right{margin-left:auto;flex-shrink:0}
 
@@ -43,14 +50,15 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .section{padding:80px 0}
 .section-label{display:inline-block;padding:4px 12px;background:#ecfdf5;color:var(--green);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:20px;margin-bottom:16px}
 .section-title{font-size:36px;font-weight:800;line-height:1.2;color:var(--g900);margin-bottom:16px}
-.section-body{font-size:18px;color:var(--g600);max-width:720px;line-height:1.6;margin-bottom:48px}
+.section-body{font-size:17px;color:var(--g600);max-width:720px;line-height:1.7;margin-bottom:32px}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--r8);font-size:15px;font-weight:600;cursor:pointer;transition:var(--t);border:none}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--r8);font-size:15px;font-weight:600;cursor:pointer;transition:var(--t);border:none;min-height:44px}
 .btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:#253350}
 .btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#1d4ed8}
-.btn-outline{background:#fff;color:var(--g700);border:1.5px solid var(--g200)}.btn-outline:hover{background:var(--g50);border-color:var(--g300)}
+.btn-outline{background:#fff;color:var(--g700);border:1.5px solid var(--g200)}.btn-outline:hover{background:var(--g50)}
 .btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#15803d}
+.btn-red{background:#fef2f2;color:var(--red);border:1.5px solid #fca5a5}.btn-red:hover{background:#fee2e2}
 
 /* Hero */
 #hero{padding:128px 0 80px;background:#fff}
@@ -59,7 +67,7 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .hero-sub{font-size:19px;color:var(--g600);max-width:560px;line-height:1.6;margin-bottom:36px}
 .hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:56px}
 .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.hero-stat{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:20px 24px;transition:var(--t)}
+.hero-stat{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:20px 24px}
 .hero-stat-val{font-size:28px;font-weight:800;color:var(--navy);margin-bottom:6px}
 .hero-stat-label{font-size:14px;color:var(--g600);display:flex;align-items:center;gap:5px}
 
@@ -73,22 +81,25 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .ps-val{font-size:20px;font-weight:800;color:var(--navy);margin-bottom:2px}
 .ps-label{font-size:12px;color:var(--g600)}
 
-/* JTBD */
-.jtbd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:48px}
+/* JTBD - 3 columns */
+.jtbd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:48px}
 .jtbd{border-radius:10px;padding:24px}
 .jtbd.eff{background:#eff6ff;border:1px solid #bfdbfe}
 .jtbd.conf{background:#f0fdf4;border:1px solid #bbf7d0}
+.jtbd.acct{background:#fefce8;border:1px solid #fde68a}
 .jtbd-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .jtbd.eff .jtbd-lbl{color:var(--blue)}
 .jtbd.conf .jtbd-lbl{color:var(--green)}
+.jtbd.acct .jtbd-lbl{color:#92400e}
 .jtbd-q{font-size:15px;color:var(--g700);line-height:1.6;font-style:italic}
 
 /* Journey */
 .journey-wrap{overflow-x:auto;padding-bottom:8px}
-.journey{display:flex;align-items:flex-start;min-width:700px}
+.journey{display:flex;align-items:flex-start;min-width:800px}
 .j-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center}
 .j-conn{padding-top:14px;color:var(--g300);font-size:18px;line-height:1}
 .j-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;margin-bottom:10px;flex-shrink:0}
+.j-dot.pre{background:var(--g400)}
 .j-dot.ok{background:var(--navy)}
 .j-dot.bad{background:var(--red)}
 .j-time{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.03em;margin-bottom:3px}
@@ -122,24 +133,27 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .ba-c{color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
 
 /* Solution pipeline */
-.pipeline{display:flex;align-items:stretch;gap:0}
+.pipeline{display:flex;align-items:stretch;gap:0;margin-bottom:12px}
 .pl-step{flex:1}
-.pl-card{border-radius:var(--r12);padding:28px;border:1px solid;height:100%}
+.pl-card{border-radius:var(--r12);padding:24px;border:1px solid;height:100%}
 .pl-card.blue{background:#eff6ff;border-color:#bfdbfe}
 .pl-card.amber{background:#fffbeb;border-color:#fde68a}
 .pl-card.green{background:#f0fdf4;border-color:#bbf7d0}
-.pl-icon{font-size:28px;margin-bottom:12px}
-.pl-name{font-size:18px;font-weight:700;color:var(--g900);margin-bottom:8px}
-.pl-desc{font-size:14px;color:var(--g600);line-height:1.5}
-.pl-arrow{display:flex;align-items:center;padding:0 10px;color:var(--blue);font-size:22px;font-weight:700;flex-shrink:0}
-.assumptions{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:24px;margin-top:24px}
-.assumptions h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);margin-bottom:12px}
-.assumptions ol{padding-left:20px}
-.assumptions li{font-size:14px;color:var(--g600);line-height:1.6;margin-bottom:6px}
+.pl-card.slate{background:#f8fafc;border-color:#cbd5e1}
+.pl-icon{font-size:24px;margin-bottom:10px}
+.pl-name{font-size:16px;font-weight:700;color:var(--g900);margin-bottom:6px}
+.pl-desc{font-size:13px;color:var(--g600);line-height:1.5}
+.pl-arrow{display:flex;align-items:center;padding:0 8px;color:var(--blue);font-size:20px;font-weight:700;flex-shrink:0}
+.pl-feedback{background:#f1f5f9;border:1px dashed var(--g300);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--g600);margin-bottom:16px;line-height:1.5}
+.pl-feedback strong{color:var(--g700)}
 .tradeoff{background:var(--navy);border-radius:var(--r12);padding:24px;margin-top:16px;color:#fff}
 .tradeoff-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:8px}
-.tradeoff p{font-size:15px;color:rgba(255,255,255,.8);line-height:1.6}
+.tradeoff p{font-size:14px;color:rgba(255,255,255,.8);line-height:1.7}
 .tradeoff strong{color:#fff}
+.assumptions{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:24px;margin-top:16px}
+.assumptions h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);margin-bottom:12px}
+.assumptions ol{padding-left:20px}
+.assumptions li{font-size:14px;color:var(--g600);line-height:1.6;margin-bottom:8px}
 
 /* Wireframes */
 .wf-grid{display:grid;grid-template-columns:60fr 40fr;gap:24px;align-items:start}
@@ -157,9 +171,7 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .wf-tab.on{background:var(--red);color:#fff;border-color:var(--red)}
 .wf-tab.off{background:#fff;color:var(--g600);border-color:var(--g200)}
 .wf-item{background:#fff;border:1px solid var(--g200);border-radius:8px;padding:10px 12px;margin-bottom:6px;border-left:3px solid}
-.wf-item.h{border-left-color:var(--red)}
-.wf-item.m{border-left-color:var(--orange)}
-.wf-item.l{border-left-color:var(--g300)}
+.wf-item.h{border-left-color:var(--red)}.wf-item.m{border-left-color:var(--orange)}.wf-item.l{border-left-color:var(--g300)}
 .wf-irow{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
 .wf-iname{font-size:12px;font-weight:600;color:var(--g900)}
 .wf-isub{font-size:10px;color:var(--g400)}
@@ -190,17 +202,24 @@ button{border:none;background:none;cursor:pointer;font-family:inherit}
 .rc-hdr.v0{background:var(--g50);border-color:var(--g200)}
 .rc-hdr.v1{background:#eff6ff;border-color:#bfdbfe}
 .rc-hdr.v2{background:#f0fdf4;border-color:#bbf7d0}
-.rc-ver{font-size:20px;font-weight:800;color:var(--g900)}
+.rc-ver{font-size:18px;font-weight:800;color:var(--g900)}
 .rc-time{font-size:12px;font-weight:600;color:var(--g600)}
 .rc-body{padding:20px;background:#fff}
-.rc-scope{font-size:14px;color:var(--g600);line-height:1.6;margin-bottom:12px}
 .rc-phase{font-size:13px;font-weight:700;color:var(--g900);margin-bottom:6px}
+.rc-scope{font-size:13px;color:var(--g600);line-height:1.6;margin-bottom:12px}
 .rc-mlbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g400);margin-bottom:4px}
 .rc-mval{font-size:13px;font-weight:600;color:var(--g900);line-height:1.4}
 .risk-callout{background:var(--navy);border-radius:var(--r12);padding:28px;margin-top:24px}
 .risk-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);margin-bottom:10px}
-.risk-callout p{font-size:15px;color:rgba(255,255,255,.8);line-height:1.6}
+.risk-callout p{font-size:14px;color:rgba(255,255,255,.8);line-height:1.7}
 .risk-callout strong{color:#fff}
+
+/* Risk Reflection */
+.rr-card{background:#fffbeb;border:1px solid #d97706;border-radius:var(--r12);padding:28px;margin-bottom:20px}
+.rr-card-title{font-size:17px;font-weight:700;color:#92400e;margin-bottom:12px}
+.rr-card p{font-size:15px;color:#78350f;line-height:1.75;margin-bottom:12px}
+.rr-card p:last-child{margin-bottom:0}
+.rr-note{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r8);padding:16px;font-size:14px;color:var(--g600);line-height:1.6}
 
 /* PROTOTYPE */
 #proto-view{display:none;padding-top:56px;min-height:100vh}
@@ -228,14 +247,13 @@ input[type=file]{display:none}
 
 /* Step 2 */
 .q-wrap{max-width:1200px;margin:0 auto;padding:28px 24px 120px}
-.q-hdr{margin-bottom:20px}
 .q-title{font-size:20px;font-weight:700;color:var(--g900);margin-bottom:10px}
-.q-prog-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.q-prog-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .q-prog-track{flex:1;height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
 .q-prog-fill{height:100%;background:var(--navy);border-radius:4px;transition:width .4s ease}
 .q-prog-lbl{font-size:13px;color:var(--g600);white-space:nowrap}
 .filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.ftab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g600);cursor:pointer;transition:var(--t)}
+.ftab{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g600);cursor:pointer;transition:var(--t);min-height:36px}
 .ftab:hover{border-color:var(--g300);color:var(--g900)}
 .ftab.fa{background:var(--navy);color:#fff;border-color:var(--navy)}
 .ftab.fh{background:var(--red);color:#fff;border-color:var(--red)}
@@ -243,18 +261,16 @@ input[type=file]{display:none}
 .ftab.fl{background:var(--g600);color:#fff;border-color:var(--g600)}
 .ftab.ff{background:#7c3aed;color:#fff;border-color:#7c3aed}
 .items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
-.ic{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:16px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;border-left:4px solid;position:relative}
-.ic:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.10)}
+.ic{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:16px;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;border-left:4px solid;position:relative}
+.ic:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
 .ic.sel{box-shadow:0 0 0 2px var(--blue);border-color:var(--blue)!important}
-.ic.ih{border-left-color:var(--red)}
-.ic.im{border-left-color:var(--orange)}
-.ic.il{border-left-color:var(--g300)}
-.ic.done{opacity:.6}
+.ic.ih{border-left-color:var(--red)}.ic.im{border-left-color:var(--orange)}.ic.il{border-left-color:var(--g300)}
+.ic.done{opacity:.65}
 .ic-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .ic-id{font-size:16px;font-weight:700;color:var(--g900)}
 .ic-desc{font-size:13px;color:var(--g600);margin-top:1px}
 .ic-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.ic-val{font-size:16px;font-weight:700;color:var(--g900)}
+.ic-val{font-size:15px;font-weight:700;color:var(--g900)}
 .rpill{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700}
 .rpill.rh{background:#fee2e2;color:var(--red)}
 .rpill.rm{background:#fef3c7;color:#92400e}
@@ -263,120 +279,105 @@ input[type=file]{display:none}
 .conf-lbl{font-size:12px;color:var(--g400);white-space:nowrap;display:flex;align-items:center;gap:3px}
 .conf-track{flex:1;height:6px;background:var(--g200);border-radius:3px;overflow:hidden}
 .conf-bar{height:100%;border-radius:3px}
-.conf-bar.ch{background:var(--red)}
-.conf-bar.cm{background:var(--orange)}
-.conf-bar.cl{background:var(--green)}
+.conf-bar.ch{background:var(--red)}.conf-bar.cm{background:var(--orange)}.conf-bar.cl{background:var(--green)}
 .conf-pct{font-size:12px;font-weight:600;white-space:nowrap}
-.conf-pct.ch{color:var(--red)}
-.conf-pct.cm{color:#92400e}
-.conf-pct.cl{color:var(--green)}
-.ic-sbadge{position:absolute;top:12px;right:48px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
-.ic-sbadge.sa{background:#dcfce7;color:#166534}
-.ic-sbadge.sc{background:#eff6ff;color:#1d4ed8}
-.ic-sbadge.sf{background:#fef2f2;color:var(--red)}
-.q-hint{background:var(--g900);padding:10px 24px;display:flex;align-items:center;gap:20px;position:fixed;bottom:0;left:0;right:0;z-index:100}
+.conf-pct.ch{color:var(--red)}.conf-pct.cm{color:#92400e}.conf-pct.cl{color:var(--green)}
+.ic-status{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;font-weight:600}
+.st-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.q-hint{background:var(--g900);padding:10px 24px;display:flex;align-items:center;gap:20px;position:fixed;bottom:0;left:0;right:0;z-index:100;flex-wrap:wrap}
 .hint-i{font-size:12px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:6px}
 kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;background:#1e293b;border:1px solid #334155;border-radius:3px;font-family:inherit;font-size:10px;font-weight:700;color:#cbd5e1}
-.hint-btn{margin-left:auto;padding:5px 14px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.complete-btn{margin-left:auto;padding:6px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;min-height:36px;transition:var(--t)}
+.complete-btn:disabled{opacity:.4;cursor:default;background:var(--g400)}
 .q-empty{text-align:center;padding:48px;color:var(--g400);font-size:15px}
 
 /* Step 3 */
 .dv-wrap{max-width:1200px;margin:0 auto;padding:24px 24px 100px}
-.dv-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.dv-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:8px}
 .dv-crumb{font-size:14px;color:var(--g600)}
 .dv-crumb b{color:var(--g900);font-weight:600}
 .dv-navs{display:flex;gap:8px}
-.dv-nav{padding:7px 18px;border-radius:var(--r8);font-size:14px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:var(--t)}
+.dv-nav{padding:7px 16px;border-radius:var(--r8);font-size:14px;font-weight:600;border:1.5px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:var(--t);min-height:40px}
 .dv-nav:hover:not(:disabled){background:var(--g50)}
 .dv-nav:disabled{opacity:.35;cursor:default}
-.dv-split{display:grid;grid-template-columns:40% 60%;gap:28px}
+.dv-split{display:grid;grid-template-columns:42% 58%;gap:28px}
 .dv-item-id{font-size:24px;font-weight:800;color:var(--g900);margin-bottom:6px}
 .dv-item-sub{font-size:15px;color:var(--g600);margin-bottom:12px}
-.dv-badges{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.dv-badges{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
 .dv-val{font-size:22px;font-weight:700;color:var(--g900)}
 .detail-tbl{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:18px}
 .detail-tbl tr{border-bottom:1px solid var(--g100)}
-.detail-tbl td{padding:10px 0}
+.detail-tbl td{padding:9px 0}
 .detail-tbl td:first-child{color:var(--g400);width:130px;font-size:13px}
 .detail-tbl td:last-child{font-weight:500;color:var(--g900)}
-.flag-box{background:#fefce8;border:1px solid #fde68a;border-left:3px solid var(--orange);border-radius:10px;padding:14px 16px;margin-bottom:18px}
-.flag-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#92400e;margin-bottom:5px}
-.flag-txt{font-size:14px;color:#78350f;line-height:1.5}
-.sched-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
-.sched-tbl th{padding:8px 12px;background:var(--g50);color:var(--g400);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:1px solid var(--g200)}
-.sched-tbl td{padding:8px 12px;border-bottom:1px solid var(--g100)}
-.sched-tbl tr.rev{background:#fef2f2}
-.sched-tbl tr.rev td{font-weight:600}
-.match{color:var(--green);font-weight:600}
-.revtag{color:var(--red);font-weight:600}
-.action-row{display:flex;gap:8px;flex-wrap:wrap}
-.abn{padding:10px 20px;border-radius:var(--r8);font-size:14px;font-weight:600;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:6px;border:1.5px solid}
+.risk-alert{border-radius:10px;padding:14px 16px;margin-bottom:18px;border-left:3px solid}
+.risk-alert.high{background:#fefce8;border-color:var(--orange)}
+.risk-alert-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#92400e;margin-bottom:5px}
+.risk-alert-txt{font-size:14px;color:#78350f;line-height:1.5}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0}
+.abn{padding:10px 18px;border-radius:var(--r8);font-size:14px;font-weight:600;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:6px;border:1.5px solid;min-height:44px}
 .abn kbd{font-size:10px;padding:1px 4px;border-radius:3px}
 .ab-acc{background:#dcfce7;color:#166534;border-color:#86efac}.ab-acc:hover:not(:disabled){background:#bbf7d0}
 .ab-cor{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}.ab-cor:hover:not(:disabled){background:#dbeafe}
 .ab-flg{background:#fef2f2;color:var(--red);border-color:#fca5a5}.ab-flg:hover:not(:disabled){background:#fee2e2}
 .abn:disabled{opacity:.4;cursor:default}
-.ab-nav{background:#fff;color:var(--g700);border-color:var(--g200)}.ab-nav:hover{background:var(--g50)}
 .dv-kbar{background:var(--g900);padding:10px 0;position:fixed;bottom:0;left:0;right:0;z-index:100}
-.dv-kbar-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:20px;align-items:center}
-.drawing-svg{width:100%;height:340px;border:1px solid var(--g300);border-radius:var(--r12);background:#e8edf2;overflow:hidden}
+.dv-kbar-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.drawing-svg{width:100%;height:300px;border:1px solid var(--g300);border-radius:var(--r12);background:#e8edf2;overflow:hidden}
 .drawing-note{font-size:12px;color:var(--g400);font-style:italic;margin-top:8px;text-align:center}
-.done-banner{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;color:#166534;margin-top:16px;display:none}
-.done-banner.on{display:block}
+.inline-confirm{border-radius:8px;padding:10px 14px;font-size:14px;font-weight:600;margin-top:12px;display:none}
+.inline-confirm.on{display:block}
+.inline-confirm.acc{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.inline-confirm.cor{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.inline-confirm.flg{background:#fef2f2;border:1px solid #fca5a5;color:var(--red)}
 
 /* Inline panels */
-.inline-panel{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:20px;margin-top:16px}
-.panel-title{font-size:14px;font-weight:700;color:var(--g900);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--g100)}
-.panel-field{margin-bottom:12px}
+.inline-panel{background:#fff;border:1px solid #e5e7eb;border-radius:var(--r12);padding:16px;margin-top:14px}
+.panel-title{font-size:14px;font-weight:700;color:var(--g900);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--g100)}
+.panel-field{margin-bottom:10px}
 .panel-field label{display:block;font-size:11px;font-weight:700;color:var(--g400);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
 .panel-field input,.panel-field textarea{width:100%;padding:8px 12px;border:1px solid var(--g200);border-radius:var(--r8);font-size:14px;font-family:inherit;color:var(--g900);outline:none;transition:border-color .15s}
 .panel-field input:focus,.panel-field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
-.panel-field textarea{resize:vertical;min-height:60px}
-.radio-opt{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:14px;color:var(--g700);cursor:pointer;border-bottom:1px solid var(--g100)}
+.panel-field textarea{resize:vertical;min-height:56px}
+.radio-opt{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:14px;color:var(--g700);cursor:pointer;border-bottom:1px solid var(--g100)}
 .radio-opt:last-of-type{border-bottom:none}
 .radio-opt input[type=radio]{cursor:pointer;accent-color:var(--blue)}
-.panel-actions{display:flex;gap:12px;align-items:center;margin-top:14px}
-.panel-cancel{font-size:14px;color:var(--g400);cursor:pointer;background:none;border:none;font-family:inherit}
+.panel-actions{display:flex;gap:12px;align-items:center;margin-top:12px}
+.panel-cancel{font-size:14px;color:var(--g400);cursor:pointer;background:none;border:none;font-family:inherit;transition:var(--t)}
 .panel-cancel:hover{color:var(--g700)}
 
 /* Step 4 */
 .sum-wrap{max-width:900px;margin:0 auto;padding:48px 24px 80px}
 .sum-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:#dcfce7;color:#166534;border-radius:20px;font-size:14px;font-weight:700;margin-bottom:20px}
 .sum-h{font-size:32px;font-weight:800;color:var(--g900);margin-bottom:6px}
-.sum-sub{font-size:16px;color:var(--g600);margin-bottom:8px}
-.sum-progress{font-size:14px;color:var(--g600);margin-bottom:28px}
-.sum-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-.ss{background:#fff;border:1px solid var(--g200);border-radius:var(--r12);padding:20px;text-align:center;box-shadow:var(--shadow)}
-.ss-val{font-size:28px;font-weight:800;color:var(--g900);margin-bottom:4px}
-.ss-lbl{font-size:13px;color:var(--g600)}
-.sum-breakdown{margin-bottom:28px}
-.break-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g100);font-size:14px}
-.break-row:last-child{border-bottom:none}
-.break-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.break-lbl{font-weight:600;color:var(--g700);width:80px;flex-shrink:0}
-.break-val{color:var(--g600)}
-.donut-row{display:flex;align-items:center;gap:40px;margin-bottom:28px}
-.donut-legend{flex:1}
-.dl-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.dl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.dl-label{font-size:14px;color:var(--g600);flex:1}
-.dl-count{font-size:16px;font-weight:700;color:var(--g900)}
-.rev-tbl{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:32px}
-.rev-tbl th{padding:10px 14px;background:var(--g50);color:var(--g400);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:2px solid var(--g200)}
-.rev-tbl td{padding:12px 14px;border-bottom:1px solid var(--g100);color:var(--g700)}
+.sum-sub{font-size:16px;color:var(--g600);margin-bottom:24px}
+.sum-progress-card{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:20px 24px;margin-bottom:28px}
+.sum-progress-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:15px;color:var(--g700)}
+.sum-progress-row strong{color:var(--g900)}
+.stat-pill{padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700}
+.sp-green{background:#dcfce7;color:#166534}
+.sp-amber{background:#fef3c7;color:#92400e}
+.sp-red{background:#fee2e2;color:var(--red)}
+.tbl-wrap{overflow-x:auto;margin-bottom:28px}
+.rev-tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}
+.rev-tbl th{padding:10px 14px;background:var(--g50);color:var(--g400);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:2px solid var(--g200);white-space:nowrap}
+.rev-tbl td{padding:12px 14px;border-bottom:1px solid var(--g100);color:var(--g700);vertical-align:top}
 .rev-tbl tr:hover td{background:var(--g50)}
-.schip{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.schip{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
 .schip.sa{background:#dcfce7;color:#166534}
-.schip.sc{background:#eff6ff;color:#1d4ed8}
-.schip.sf{background:#fef2f2;color:var(--red)}
-.exp-box{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:32px;text-align:center}
+.schip.sc{background:#fef3c7;color:#92400e}
+.schip.sf{background:#fee2e2;color:var(--red)}
+.schip.sp{background:var(--g100);color:var(--g600)}
+.val-summary{margin-bottom:28px}
+.vs-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--g100);font-size:14px}
+.vs-row:last-child{border-bottom:none;font-weight:600}
+.exp-box{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r12);padding:32px;text-align:center;margin-bottom:24px}
 .exp-h{font-size:20px;font-weight:700;color:var(--g900);margin-bottom:8px}
 .exp-desc{font-size:15px;color:var(--g600);margin-bottom:24px}
 .exp-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.exp-note{font-size:13px;color:var(--g400);margin-top:14px;line-height:1.5}
 
 /* Tooltip */
-#tip{position:fixed;z-index:9999;background:var(--g900);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.4;max-width:260px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:0;transition:opacity .15s ease;white-space:normal}
+#tip{position:fixed;z-index:9999;background:var(--g900);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.45;max-width:260px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.22);opacity:0;transition:opacity .15s;white-space:normal}
 #tip.on{opacity:1}
 .ii{display:inline-flex;align-items:center;justify-content:center;cursor:help;vertical-align:middle;margin-left:3px;flex-shrink:0;line-height:1}
 
@@ -390,25 +391,26 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 #tour-tip p{font-size:14px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:16px}
 .tour-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .tour-prog{font-size:12px;color:rgba(255,255,255,.3)}
-.tour-next{padding:7px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:var(--t)}
-.tour-next:hover{background:#1d4ed8}
+.tour-next{padding:7px 16px;background:var(--blue);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none}
 .tour-skip{font-size:13px;color:rgba(255,255,255,.35);cursor:pointer}
 .tour-skip:hover{color:rgba(255,255,255,.7)}
 
 /* Toast */
-#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--g900);color:#fff;border-radius:10px;padding:14px 20px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:transform .3s ease,opacity .3s ease}
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--g900);color:#fff;border-radius:10px;padding:14px 20px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:transform .3s,opacity .3s}
 #toast.on{transform:translateY(0);opacity:1}
 .t-icon{width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 
 /* Print */
-#print-area{display:none}
+#print-summary{display:none}
 @media print{
   body>*{display:none!important}
-  #print-area{display:block!important;font-family:sans-serif;padding:24px}
-  #print-area h2{margin-bottom:8px}
-  #print-area table{border-collapse:collapse;width:100%;font-size:11px}
-  #print-area th,#print-area td{border:1px solid #ccc;padding:6px 8px;text-align:left}
-  #print-area th{background:#f5f5f5;font-weight:bold}
+  #print-summary{display:block!important;font-family:sans-serif;padding:24px;color:#000}
+  #print-summary h2{font-size:18px;margin-bottom:4px}
+  #print-summary .ps-meta{font-size:12px;color:#666;margin-bottom:16px}
+  #print-summary table{border-collapse:collapse;width:100%;font-size:11px}
+  #print-summary th,#print-summary td{border:1px solid #ccc;padding:6px 8px;text-align:left}
+  #print-summary th{background:#f5f5f5;font-weight:bold}
+  #print-summary .ps-footer{margin-top:16px;font-size:11px;color:#666;border-top:1px solid #ccc;padding-top:8px}
 }
 
 /* Responsive */
@@ -424,21 +426,27 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
   .hero-stats{grid-template-columns:1fr}
   .jtbd-grid{grid-template-columns:1fr}
   .persona-stats{grid-template-columns:1fr}
-  .sum-stats{grid-template-columns:repeat(2,1fr)}
+  .ba-grid{grid-template-columns:1fr!important}
+  .items-grid{grid-template-columns:1fr}
 }
 @media(max-width:767px){
   .hero-h1{font-size:28px}
   .section{padding:48px 0}
-  .section-title{font-size:28px}
-  .section-body{font-size:16px}
+  .section-title{font-size:26px}
+  .section-body{font-size:15px}
   .nav-pills{display:none}
   .journey{flex-direction:column;min-width:unset}
   .j-conn{transform:rotate(90deg);padding:4px 0}
-  .items-grid{grid-template-columns:1fr}
-  .donut-row{flex-direction:column}
-  .sum-stats{grid-template-columns:repeat(2,1fr)}
   .hero-btns{flex-direction:column;align-items:flex-start}
-  .ba-grid{grid-template-columns:1fr!important}
+  .jtbd-grid{grid-template-columns:1fr}
+  .items-grid{grid-template-columns:1fr}
+  .q-hint{gap:10px;padding:8px 16px}
+  .hint-i{display:none}
+  .hint-i:nth-child(1),.hint-i:nth-child(2){display:flex}
+  .abn{padding:8px 14px;font-size:13px}
+  .dv-kbar-inner{gap:10px}
+  .dv-kbar-inner .hint-i:nth-child(n+4){display:none}
+  .sum-stats-row{flex-direction:column!important}
 }
 </style>
 </head>
@@ -447,7 +455,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <!-- NAV -->
 <nav id="main-nav" role="navigation" aria-label="Main navigation">
   <div class="nav-inner">
-    <button class="nav-brand" onclick="showView('cs')" aria-label="Beam AI home">Beam AI</button>
+    <button class="nav-brand" onclick="showView('cs')">Beam AI</button>
     <span class="nav-sep">·</span>
     <div class="nav-pills" id="cs-pills" role="tablist">
       <button class="nav-pill active" data-section="s1" onclick="navScroll('s1')" role="tab">Problem</button>
@@ -457,25 +465,25 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
       <button class="nav-pill" data-section="s5" onclick="navScroll('s5')" role="tab">Rollout</button>
     </div>
     <div class="proto-nav" id="proto-pills">
-      <button class="proto-back" onclick="showView('cs')" aria-label="Back to case study">← Case Study</button>
+      <button class="proto-back" onclick="showView('cs')">← Case Study</button>
       <span class="nav-sep">|</span>
       <div class="proto-steps" id="step-crumbs" role="tablist">
-        <button class="proto-step active" id="sc1" onclick="jumpStep(1)" role="tab">Step 1</button>
+        <button class="proto-step active" id="sc1" onclick="jumpStep(1)">Step 1</button>
         <span class="proto-step-dot">·</span>
-        <button class="proto-step locked" id="sc2" onclick="jumpStep(2)" role="tab">Step 2</button>
+        <button class="proto-step locked" id="sc2" onclick="jumpStep(2)">Step 2</button>
         <span class="proto-step-dot">·</span>
-        <button class="proto-step locked" id="sc3" onclick="jumpStep(3)" role="tab">Step 3</button>
+        <button class="proto-step locked" id="sc3" onclick="jumpStep(3)">Step 3</button>
         <span class="proto-step-dot">·</span>
-        <button class="proto-step locked" id="sc4" onclick="jumpStep(4)" role="tab">Step 4</button>
+        <button class="proto-step locked" id="sc4" onclick="jumpStep(4)">Step 4</button>
       </div>
     </div>
     <div class="nav-right">
-      <button class="nav-cta" id="nav-cta" onclick="showView('proto')">Explore Prototype →</button>
+      <button class="nav-cta" id="nav-cta" onclick="openProto()">Explore Prototype →</button>
     </div>
   </div>
 </nav>
 
-<!-- CASE STUDY VIEW -->
+<!-- CASE STUDY -->
 <div id="cs-view">
 
 <!-- HERO -->
@@ -485,21 +493,21 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
     <h1 class="hero-h1">Quick Review Workflow</h1>
     <p class="hero-sub">How a confidence-first review queue helps HVAC estimators trust AI takeoffs and cut review time from 90 minutes to under 25.</p>
     <div class="hero-btns">
-      <button class="btn btn-navy" onclick="showView('proto')">Explore Prototype →</button>
+      <button class="btn btn-navy" onclick="openProto()">Explore Prototype →</button>
       <button class="btn btn-outline" onclick="document.getElementById('s1').scrollIntoView({behavior:'smooth'})">Read Product Thinking ↓</button>
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
         <div class="hero-stat-val">400–600</div>
-        <div class="hero-stat-label">annotations per drawing <span class="ii" data-tip="src-annot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="hero-stat-label">annotations per drawing <span class="ii" data-tip="src-annot"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
       </div>
       <div class="hero-stat">
         <div class="hero-stat-val">60–90 min</div>
-        <div class="hero-stat-label">average review time <span class="ii" data-tip="src-time"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="hero-stat-label">average review time <span class="ii" data-tip="src-time"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
       </div>
       <div class="hero-stat">
         <div class="hero-stat-val">$40K+</div>
-        <div class="hero-stat-label">cost of a missed AHU <span class="ii" data-tip="src-ahu"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="hero-stat-label">cost of a missed AHU <span class="ii" data-tip="src-ahu"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
       </div>
     </div>
   </div>
@@ -509,9 +517,11 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <section id="s1" class="section" style="background:var(--g50)">
   <div class="container">
     <span class="section-label">Frame the Problem</span>
-    <h2 class="section-title">Why estimators don't trust AI takeoffs</h2>
-    <p class="section-body">Beam AI surfaces hundreds of annotations per drawing. Without confidence signals, estimators review everything equally — or skip items they shouldn't.</p>
-    <div class="persona-card" id="tour-persona">
+    <h2 class="section-title">The estimator's real problem isn't speed — it's knowing when to stop</h2>
+    <p class="section-body">Beam AI surfaces hundreds of annotations per drawing. The AI does the detection. But the estimator still carries the professional risk. If something is wrong in the exported BoQ, it's their name on it — not the model's.</p>
+    <p class="section-body" style="margin-top:-20px">The result: estimators either check everything (slow, unsustainable) or check selectively and absorb personal liability for what they missed. What's missing isn't a better list. It's a defensible stopping point — a system that tells them they've covered enough high-risk surface area to sign off with confidence.</p>
+
+    <div class="persona-card">
       <div class="persona-avatar" aria-hidden="true">MC</div>
       <div style="flex:1">
         <div class="persona-name">Marcus Chen, Senior Estimator</div>
@@ -523,6 +533,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         </div>
       </div>
     </div>
+
     <div class="jtbd-grid">
       <div class="jtbd eff">
         <div class="jtbd-lbl">JTBD — Efficiency</div>
@@ -532,10 +543,22 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <div class="jtbd-lbl">JTBD — Confidence</div>
         <div class="jtbd-q">"Feel confident enough to export without wondering if I missed something."</div>
       </div>
+      <div class="jtbd acct">
+        <div class="jtbd-lbl">JTBD — Accountability</div>
+        <div class="jtbd-q">"Have a record of what I checked and why I approved it, so if something goes wrong in the field, I can show my work."</div>
+      </div>
     </div>
+
     <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g400);margin-bottom:20px">Day in the Life / Without Quick Review</div>
     <div class="journey-wrap">
       <div class="journey" role="list">
+        <div class="j-step" role="listitem">
+          <div class="j-dot pre">0</div>
+          <div class="j-time">06:45</div>
+          <div class="j-event">Pre-review uncertainty</div>
+          <div class="j-detail">Marcus has a 10am estimate presentation. He has no idea how long the review will take. He blocks 3 hours to be safe. The anxiety starts before he opens the tool.</div>
+        </div>
+        <div class="j-conn" aria-hidden="true">→</div>
         <div class="j-step" role="listitem">
           <div class="j-dot ok">1</div>
           <div class="j-time">07:15</div>
@@ -584,21 +607,21 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
     <div class="metrics-grid">
       <div class="mc blue">
         <div class="mc-lbl">Review Completion Time</div>
-        <div class="mc-target">&lt;25 min <span class="ii" data-tip="m-time"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="mc-target">&lt;25 min <span class="ii" data-tip="m-time"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
         <div class="mc-note">Per 40-sheet drawing · Baseline: 90 min</div>
         <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Session duration from first annotation opened → export click. Server-side per session.</div>
       </div>
       <div class="mc green">
         <div class="mc-lbl">AI Acceptance Rate</div>
-        <div class="mc-target">&gt;82% <span class="ii" data-tip="m-accept"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="mc-target">&gt;82% <span class="ii" data-tip="m-accept"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
         <div class="mc-note">Without correction · No baseline yet</div>
         <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Accept actions ÷ total actioned items per session. Broken down by item type and floor.</div>
       </div>
       <div class="mc amber">
         <div class="mc-lbl">Post-Export Error Rate</div>
-        <div class="mc-target">&lt;1.5% <span class="ii" data-tip="m-error"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
+        <div class="mc-target">&lt;1.5% <span class="ii" data-tip="m-error"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span></div>
         <div class="mc-note">Quantity discrepancy · Baseline assumed</div>
-        <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Flagged field corrections ÷ total items exported. Requires field verification integration (v2).</div>
+        <div class="mc-instr"><strong style="color:var(--g700);font-size:11px;text-transform:uppercase;letter-spacing:.04em">How to instrument</strong><br>Flagged field corrections ÷ total items exported. Requires field verification integration (Phase 3).</div>
       </div>
     </div>
   </div>
@@ -635,18 +658,24 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <section id="s3" class="section" style="background:#fff">
   <div class="container">
     <span class="section-label">Solution Architecture</span>
-    <h2 class="section-title">Three-layer architecture</h2>
+    <h2 class="section-title">Four-layer architecture</h2>
     <p class="section-body">Each layer builds on the last. The key constraint: no new ML models. Everything surfaces what Beam already computes.</p>
     <div class="pipeline">
-      <div class="pl-step"><div class="pl-card blue"><div class="pl-icon">🎯</div><div class="pl-name">Confidence Engine</div><div class="pl-desc">Scores each annotation 0–100 based on symbol clarity, bounding box overlap, drawing scale consistency, and historical accuracy for that item type.</div></div></div>
+      <div class="pl-step"><div class="pl-card blue"><div class="pl-icon">🎯</div><div class="pl-name">Layer 1: Confidence Engine</div><div class="pl-desc">Scores each annotation 0–100 based on symbol clarity, bounding box overlap, drawing scale consistency, and historical accuracy for that item type.</div></div></div>
       <div class="pl-arrow" aria-hidden="true">→</div>
-      <div class="pl-step"><div class="pl-card amber"><div class="pl-icon">⚡</div><div class="pl-name">Risk Prioritizer</div><div class="pl-desc">Combines confidence score, estimated dollar value, and item rarity into a ranked queue. Low confidence + high value = top of queue.</div></div></div>
+      <div class="pl-step"><div class="pl-card amber"><div class="pl-icon">⚡</div><div class="pl-name">Layer 2: Risk Prioritizer</div><div class="pl-desc">Combines confidence score, estimated dollar value, and item rarity into a ranked queue. Low confidence + high value = top of queue.</div></div></div>
       <div class="pl-arrow" aria-hidden="true">→</div>
-      <div class="pl-step"><div class="pl-card green"><div class="pl-icon">✓</div><div class="pl-name">Quick Review UX</div><div class="pl-desc">Keyboard-first interface surfaces drawing context inline. Progress bar and export gating prevent premature BoQ submission.</div></div></div>
+      <div class="pl-step"><div class="pl-card green"><div class="pl-icon">✓</div><div class="pl-name">Layer 3: Quick Review UX</div><div class="pl-desc">Keyboard-first interface surfaces drawing context inline. Progress bar and export gating prevent premature BoQ submission.</div></div></div>
+      <div class="pl-arrow" aria-hidden="true">→</div>
+      <div class="pl-step"><div class="pl-card slate"><div class="pl-icon">↩</div><div class="pl-name">Layer 4: Calibration Signal</div><div class="pl-desc">When a flagged item gets corrected in the field, that event adjusts confidence weights for that item type on future drawings. This is what separates a learning system from a static sort.</div></div></div>
+    </div>
+    <div class="pl-feedback">
+      <strong>↩ Feedback loop:</strong> Layer 4 feeds back into Layer 1 over time — confidence weights adjust as field corrections accumulate. Without field integration, Layer 4 is inactive and scores are fixed at model training time.
     </div>
     <div class="tradeoff">
       <div class="tradeoff-lbl">Key Trade-off</div>
-      <p><strong>False positives are acceptable.</strong> Cost of an unnecessary check: ~10 seconds. Cost of a missed AHU miscount: $40,000+. The system deliberately biases toward over-flagging.</p>
+      <p>False positives are acceptable. Cost of an unnecessary check: ~10 seconds. Cost of a missed AHU miscount: $40,000+. The system biases toward over-flagging.</p>
+      <p style="margin-top:10px">Without field feedback integration, confidence scores are static. Useful on day one — but calibration over time is what makes the system defensible at 6 months.</p>
     </div>
     <div class="assumptions">
       <h4>Assumptions — stated explicitly</h4>
@@ -654,6 +683,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <li>Confidence scores already exist in Beam's ML pipeline. This is a UI surface change, not a new model.</li>
         <li>Dollar values come from RSMeans 2024 HVAC reference data, not live quote feeds.</li>
         <li>"Review complete" ≠ 100% coverage. Threshold: all High-Risk items cleared + 60% overall.</li>
+        <li>The feedback loop (Layer 4) requires field integration. Until that exists, confidence scores are fixed at model training time. <strong>[ASSUMPTION — this is the single biggest architectural dependency in the system.]</strong></li>
       </ol>
     </div>
   </div>
@@ -686,20 +716,11 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
               <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 61% · HIGH RISK</div>
               <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div><div class="wf-act wf-act-f">⚑ Flag</div></div>
             </div>
-            <div class="wf-item h">
-              <div class="wf-irow"><div><div class="wf-iname">VAV-12 · Variable Air Volume</div><div class="wf-isub">Floor 3, Zone B</div></div><div class="wf-ival">$2,100</div></div>
-              <div class="wf-conf"><div class="wf-conf-fill" style="width:74%;background:var(--orange)"></div></div>
-              <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 74% · HIGH RISK</div>
-              <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div><div class="wf-act wf-act-f">⚑ Flag</div></div>
-            </div>
             <div class="wf-item m">
               <div class="wf-irow"><div><div class="wf-iname">SD-44 · Supply Diffuser</div><div class="wf-isub">Floor 2, Room 204</div></div><div class="wf-ival">$85</div></div>
               <div class="wf-conf"><div class="wf-conf-fill" style="width:83%;background:var(--orange)"></div></div>
               <div style="font-size:10px;color:var(--g400);margin-bottom:6px">AI Confidence: 83% · MEDIUM</div>
               <div class="wf-acts"><div class="wf-act wf-act-a">✓ Accept</div><div class="wf-act wf-act-c">✏ Correct</div></div>
-            </div>
-            <div style="background:var(--g900);padding:8px 12px;border-radius:6px;font-size:11px;color:rgba(255,255,255,.45);display:flex;gap:12px;margin-top:8px">
-              <span><kbd>↑↓</kbd> Navigate</span><span><kbd>Enter</kbd> Open</span><span><kbd>A</kbd> Accept</span>
             </div>
           </div>
         </div>
@@ -716,19 +737,10 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
             <div class="wf-d-id">AHU-03 · Air Handling Unit</div>
             <span class="wf-d-badge">HIGH RISK</span>
             <table class="wf-dt">
-              <tr><td>Qty</td><td>1 unit</td></tr>
-              <tr><td>Type</td><td>Rooftop Package</td></tr>
-              <tr><td>Capacity</td><td>20 Ton</td></tr>
-              <tr><td>Est. Value</td><td>$38,400</td></tr>
+              <tr><td>Qty</td><td>1 unit</td></tr><tr><td>Type</td><td>Rooftop Package</td></tr><tr><td>Capacity</td><td>20 Ton</td></tr><tr><td>Est. Value</td><td>$38,400</td></tr>
             </table>
             <div class="wf-flag">⚠ Overlapping bounding box with AHU-02 — possible double-count. Verify equipment schedule.</div>
-            <table class="wf-sched">
-              <tr><th>Unit</th><th>Status</th></tr>
-              <tr><td>AHU-01</td><td style="color:var(--green);font-weight:600">✓ Match</td></tr>
-              <tr><td>AHU-02</td><td style="color:var(--green);font-weight:600">✓ Match</td></tr>
-              <tr class="rev"><td>AHU-03</td><td style="color:var(--red);font-weight:600">← Reviewing</td></tr>
-            </table>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
               <div class="wf-act wf-act-a" style="padding:5px 10px">✓ Accept [A]</div>
               <div class="wf-act wf-act-c" style="padding:5px 10px">✏ Correct [C]</div>
               <div class="wf-act wf-act-f" style="padding:5px 10px">⚑ Flag [F]</div>
@@ -746,7 +758,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <div style="font-size:20px;font-weight:700;color:var(--g900);margin-bottom:6px">See this as a working prototype →</div>
         <div style="font-size:15px;color:var(--g600)">The queue, detail view, and export flow — interactive, step by step.</div>
       </div>
-      <button class="btn btn-blue" onclick="showView('proto')" style="flex-shrink:0">Open Prototype</button>
+      <button class="btn btn-blue" onclick="openProto()" style="flex-shrink:0">Open Prototype</button>
     </div>
   </div>
 </section>
@@ -780,7 +792,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
         <div class="rc-hdr v2"><span class="rc-ver">Phase 3</span><span class="rc-time">Weeks 11–18</span></div>
         <div class="rc-body">
           <div class="rc-phase">Export Gating + Post-Export Instrumentation</div>
-          <div class="rc-scope">Block BoQ export until all high-risk items actioned. Session summary on export. Flagged items routed to project lead queue. Field error tracking (requires Procore or equivalent API — dependency to confirm Week 6).</div>
+          <div class="rc-scope">Block BoQ export until all high-risk items actioned. Session summary on export. Flagged items routed to project lead queue. Field error tracking requires Procore or equivalent — confirm by Week 6.</div>
           <div class="rc-mlbl">Exit criterion</div>
           <div class="rc-mval">Post-export error rate drops below 1.5% across 20+ export events.</div>
         </div>
@@ -793,6 +805,21 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
   </div>
 </section>
 
+<!-- RISK REFLECTION -->
+<section class="section" style="background:var(--g50)">
+  <div class="container">
+    <span class="section-label" style="background:#fffbeb;color:#92400e">Risk Reflection</span>
+    <h2 class="section-title">The one question that determines whether this works</h2>
+    <div class="rr-card">
+      <div class="rr-card-title">Are confidence scores actually calibrated?</div>
+      <p>Before building the ranked queue, run a data audit on 50 historical drawings. If a 61% confidence score and an 85% confidence score have the same real-world correction rate, the prioritization model is noise — and the entire product premise collapses.</p>
+      <p>This is not a UX risk. It's a model risk. It needs to be answered with data before a single line of interface code is written.</p>
+      <p><strong>Test:</strong> Pull correction events from existing Beam AI sessions. Does correction rate differ meaningfully (2x minimum) between low and high confidence items? If yes — build. If no — pivot to dollar-value-only prioritization, which requires no confidence signal at all.</p>
+    </div>
+    <div class="rr-note">Secondary risk: export gating (Phase 3) may create friction if confidence scores aren't trusted yet. Mitigation: Phase 2 keeps export ungated — we observe behaviour before enforcing. See rollout plan.</div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer style="background:var(--navy);padding:40px 0;border-top:1px solid rgba(255,255,255,.07)">
   <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
@@ -802,7 +829,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 </footer>
 </div><!-- /cs-view -->
 
-<!-- PROTOTYPE VIEW -->
+<!-- PROTOTYPE -->
 <div id="proto-view">
 
 <!-- STEP 1 -->
@@ -810,7 +837,7 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
   <div class="up-wrap">
     <div class="up-h">Step 1: Upload Drawing</div>
     <div class="up-sub">Start a review session by uploading a mechanical drawing set, or use the sample drawing to explore the workflow.</div>
-    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="dzDrag(event,true)" ondragleave="dzDrag(event,false)" ondrop="dzDrop(event)" role="button" tabindex="0" aria-label="Drop PDF drawings here or click to browse" onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('file-input').click()">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="dzDrag(event,true)" ondragleave="dzDrag(event,false)" ondrop="dzDrop(event)" role="button" tabindex="0" onkeydown="if(event.key==='Enter')document.getElementById('file-input').click()">
       <div class="dz-icon">📄</div>
       <div class="dz-main">Drop your mechanical drawings here</div>
       <div class="dz-sub">PDF · Max 200MB</div>
@@ -819,40 +846,38 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
     <div class="up-sep">or</div>
     <button class="btn btn-navy" id="sample-btn" onclick="startUpload('sample')">Use sample drawing →</button>
     <div class="up-progress" id="up-progress">
-      <div class="up-plbl" id="up-plbl">Processing drawing 40-B…</div>
+      <div class="up-plbl" id="up-plbl">Detecting annotations on Drawing 40-B...</div>
       <div class="up-track"><div class="up-fill" id="up-fill"></div></div>
     </div>
-    <div class="up-note">In production, Beam AI processes drawings in 24–72 hours. This demo simulates an already-processed result.</div>
+    <div class="up-note">In production, Beam AI processes drawings in 24–72 hours. This demo simulates an already-processed result.<br><br><em>[ASSUMPTION: The 8 sample items below are fabricated for demo purposes — real data would come from Beam AI's annotation pipeline.]</em></div>
   </div>
 </div>
 
 <!-- STEP 2 -->
 <div id="pstep2" class="proto-step-view">
   <div class="q-wrap">
-    <div class="q-hdr" id="tour-queue-hdr">
-      <div class="q-title">Drawing 40-B · Floor Plans · 452 annotations detected</div>
-      <div class="q-prog-row">
-        <div class="q-prog-track"><div class="q-prog-fill" id="q-prog-fill" style="width:9%"></div></div>
-        <div class="q-prog-lbl" id="q-prog-lbl">41 of 452 reviewed · 9%</div>
-      </div>
+    <div class="q-title">Drawing 40-B · Floor Plans · 452 annotations detected</div>
+    <div class="q-prog-row">
+      <div class="q-prog-track"><div class="q-prog-fill" id="q-prog-fill" style="width:0%"></div></div>
+      <div class="q-prog-lbl" id="q-prog-lbl">0 of 8 reviewed</div>
     </div>
-    <div class="filter-bar" id="tour-filters" role="tablist" aria-label="Filter annotations">
-      <button class="ftab fa" data-f="all" onclick="setFilter('all')" role="tab" aria-selected="true">All</button>
-      <button class="ftab" data-f="high" onclick="setFilter('high')" role="tab" aria-selected="false">High Risk <span id="hc">4</span></button>
-      <button class="ftab" data-f="med" onclick="setFilter('med')" role="tab" aria-selected="false">Medium <span id="mc2">4</span></button>
-      <button class="ftab" data-f="low" onclick="setFilter('low')" role="tab" aria-selected="false">Low</button>
-      <button class="ftab" data-f="flag" onclick="setFilter('flag')" role="tab" aria-selected="false">Flagged <span id="fc">0</span></button>
+    <div class="filter-bar" role="tablist">
+      <button class="ftab fa" data-f="all" onclick="setFilter('all')" role="tab">All <span id="cnt-all">8</span></button>
+      <button class="ftab" data-f="HIGH" onclick="setFilter('HIGH')" role="tab">High Risk <span id="cnt-high">5</span></button>
+      <button class="ftab" data-f="MEDIUM" onclick="setFilter('MEDIUM')" role="tab">Medium <span id="cnt-med">2</span></button>
+      <button class="ftab" data-f="LOW" onclick="setFilter('LOW')" role="tab">Low <span id="cnt-low">1</span></button>
+      <button class="ftab" data-f="flag" onclick="setFilter('flag')" role="tab">Flagged <span id="cnt-flag">0</span></button>
     </div>
-    <div class="items-grid" id="items-grid" role="list" aria-label="Annotation items"></div>
+    <div class="items-grid" id="items-grid" role="list"></div>
     <div class="q-empty" id="q-empty" style="display:none">No items in this filter.</div>
   </div>
-  <div class="q-hint" id="tour-kbhint" role="toolbar" aria-label="Keyboard shortcuts">
+  <div class="q-hint" role="toolbar">
     <span class="hint-i"><kbd>↑↓</kbd> Navigate</span>
     <span class="hint-i"><kbd>Enter</kbd> Open</span>
     <span class="hint-i"><kbd>A</kbd> Accept</span>
     <span class="hint-i"><kbd>C</kbd> Correct</span>
     <span class="hint-i"><kbd>F</kbd> Flag</span>
-    <button class="hint-btn" id="complete-btn" onclick="checkComplete()" style="display:none">Complete Review →</button>
+    <button class="complete-btn" id="complete-btn" onclick="tryComplete()" disabled>Complete Review →</button>
   </div>
 </div>
 
@@ -860,69 +885,62 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <div id="pstep3" class="proto-step-view">
   <div class="dv-wrap">
     <div class="dv-topbar">
-      <div class="dv-crumb">Review Queue → <b id="dv-id-crumb">AHU-03</b></div>
+      <div class="dv-crumb">Review Queue → <b id="dv-id-crumb">—</b></div>
       <div class="dv-navs">
-        <button class="dv-nav" id="dv-prev" onclick="dvNav(-1)" aria-label="Previous item">← Prev</button>
-        <button class="dv-nav" id="dv-next" onclick="dvNav(1)" aria-label="Next item">Next →</button>
-        <button class="dv-nav" onclick="goStep(2)" aria-label="Back to queue">← Queue</button>
+        <button class="dv-nav" id="dv-prev" onclick="dvNav(-1)">← Prev</button>
+        <button class="dv-nav" id="dv-next" onclick="dvNav(1)">Next →</button>
+        <button class="dv-nav" onclick="goStep(2)">← Queue</button>
       </div>
     </div>
     <div class="dv-split">
       <div>
-        <div class="dv-item-id" id="dv-id">AHU-03</div>
-        <div class="dv-item-sub" id="dv-sub">Air Handling Unit · Floor 4</div>
-        <div class="dv-badges">
-          <span id="dv-risk" class="rpill rh">HIGH RISK</span>
-          <span id="dv-val" class="dv-val">$38,400</span>
-          <span class="ii" data-tip="src-ahu"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span>
-        </div>
+        <div class="dv-item-id" id="dv-id"></div>
+        <div class="dv-item-sub" id="dv-sub"></div>
+        <div class="dv-badges" id="dv-badges"></div>
         <table class="detail-tbl" id="dv-tbl"></table>
-        <div class="flag-box" id="dv-flag" style="display:none">
-          <div class="flag-lbl">⚠ Flag Reason</div>
-          <div class="flag-txt" id="dv-flag-txt"></div>
+        <div class="risk-alert high" id="dv-alert" style="display:none">
+          <div class="risk-alert-lbl">⚠ Risk Alert</div>
+          <div class="risk-alert-txt" id="dv-alert-txt"></div>
         </div>
-        <table class="sched-tbl" id="dv-sched" style="width:100%;margin-bottom:20px">
-          <thead><tr><th>Unit</th><th>Status</th></tr></thead>
-          <tbody id="dv-sched-body"></tbody>
-        </table>
-        <div class="action-row" id="tour-actions">
-          <button class="abn ab-acc" id="btn-acc" onclick="doAction('accepted')" aria-label="Accept item"><kbd>A</kbd> Accept</button>
-          <button class="abn ab-cor" id="btn-cor" onclick="openCorrectPanel()" aria-label="Correct item"><kbd>C</kbd> Correct</button>
-          <button class="abn ab-flg" id="btn-flg" onclick="openFlagPanel()" aria-label="Flag for review"><kbd>F</kbd> Flag</button>
+        <div class="action-row" id="action-row">
+          <button class="abn ab-acc" id="btn-acc" onclick="doAccept()"><kbd>A</kbd> Accept</button>
+          <button class="abn ab-cor" id="btn-cor" onclick="openCorrectPanel()"><kbd>C</kbd> Correct</button>
+          <button class="abn ab-flg" id="btn-flg" onclick="openFlagPanel()"><kbd>F</kbd> Flag</button>
         </div>
-        <!-- Inline Correct Panel -->
+        <!-- Correct Panel -->
         <div id="inline-correct" style="display:none">
           <div class="inline-panel">
             <div class="panel-title">Edit Correction</div>
-            <div class="panel-field"><label>Quantity</label><input type="number" id="cor-qty" min="0" step="1" value="1"></div>
-            <div class="panel-field"><label>Type</label><input type="text" id="cor-type" placeholder="Item type"></div>
-            <div class="panel-field"><label>Note (optional)</label><textarea id="cor-note" placeholder="Describe the correction…"></textarea></div>
+            <div class="panel-field"><label>Quantity</label><input type="number" id="cor-qty" min="0" step="1"></div>
+            <div class="panel-field"><label>Type</label><input type="text" id="cor-type"></div>
+            <div class="panel-field"><label>Note</label><textarea id="cor-note" placeholder="e.g. Symbol matches but qty is 2 not 1"></textarea></div>
             <div class="panel-actions">
-              <button class="btn btn-blue" style="padding:8px 18px;font-size:14px" onclick="saveCorrection()">Save Correction</button>
+              <button class="btn btn-blue" style="padding:8px 18px;font-size:14px;min-height:40px" onclick="saveCorrection()">Save Correction</button>
               <button class="panel-cancel" onclick="closePanel()">Cancel</button>
             </div>
           </div>
         </div>
-        <!-- Inline Flag Panel -->
+        <!-- Flag Panel -->
         <div id="inline-flag" style="display:none">
           <div class="inline-panel">
-            <div class="panel-title">Select Flag Reason</div>
-            <label class="radio-opt"><input type="radio" name="flag-reason" value="Possible double-count" onchange="onFlagReasonChange(this)"> Possible double-count</label>
-            <label class="radio-opt"><input type="radio" name="flag-reason" value="Wrong item type" onchange="onFlagReasonChange(this)"> Wrong item type</label>
-            <label class="radio-opt"><input type="radio" name="flag-reason" value="Location mismatch" onchange="onFlagReasonChange(this)"> Location mismatch</label>
-            <label class="radio-opt"><input type="radio" name="flag-reason" value="Other" onchange="onFlagReasonChange(this)"> Other (add note)</label>
-            <textarea id="flag-note" style="display:none;width:100%;margin-top:8px;padding:8px 12px;border:1px solid var(--g200);border-radius:var(--r8);font-size:14px;font-family:inherit;min-height:60px;resize:vertical" placeholder="Describe the issue…"></textarea>
+            <div class="panel-title">Why are you flagging this item?</div>
+            <label class="radio-opt"><input type="radio" name="fr" value="Possible double-count" onchange="onFlagChange(this)"> Possible double-count</label>
+            <label class="radio-opt"><input type="radio" name="fr" value="Wrong item type" onchange="onFlagChange(this)"> Wrong item type</label>
+            <label class="radio-opt"><input type="radio" name="fr" value="Location mismatch" onchange="onFlagChange(this)"> Location mismatch</label>
+            <label class="radio-opt"><input type="radio" name="fr" value="Needs senior review" onchange="onFlagChange(this)"> Needs senior review</label>
+            <label class="radio-opt"><input type="radio" name="fr" value="Other" onchange="onFlagChange(this)"> Other</label>
+            <textarea id="flag-note" style="display:none;width:100%;margin-top:8px;padding:8px 12px;border:1px solid var(--g200);border-radius:var(--r8);font-family:inherit;font-size:14px;min-height:56px;resize:vertical" placeholder="Describe the issue..."></textarea>
             <div class="panel-actions">
-              <button class="btn" style="background:#fef2f2;color:var(--red);border:1.5px solid #fca5a5;padding:8px 18px;font-size:14px" onclick="confirmFlag()">⚑ Confirm Flag</button>
+              <button class="btn btn-red" style="padding:8px 18px;font-size:14px;min-height:40px" onclick="confirmFlag()">⚑ Confirm Flag</button>
               <button class="panel-cancel" onclick="closePanel()">Cancel</button>
             </div>
           </div>
         </div>
-        <div class="done-banner" id="dv-done-banner">✓ Marked — advancing to next item</div>
+        <div class="inline-confirm" id="dv-confirm"></div>
       </div>
       <div>
-        <svg class="drawing-svg" id="drawing-svg" viewBox="0 0 600 340" xmlns="http://www.w3.org/2000/svg" aria-label="Drawing illustration" role="img"></svg>
-        <div class="drawing-note" id="tour-drawing">Drawing view is illustrative. In production, the actual PDF sheet renders here with the annotation highlighted in context.</div>
+        <svg class="drawing-svg" id="drawing-svg" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg" aria-label="Drawing illustration"></svg>
+        <div class="drawing-note">Drawing view is illustrative. In production, the actual PDF sheet renders here with the annotation highlighted in context.</div>
       </div>
     </div>
   </div>
@@ -941,32 +959,29 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 <div id="pstep4" class="proto-step-view">
   <div class="sum-wrap">
     <div class="sum-badge">✓ Review Complete</div>
-    <div class="sum-h">Drawing 40-B</div>
-    <div class="sum-sub">Here's what was covered in this session.</div>
-    <div class="sum-progress" id="sum-progress"></div>
-    <div class="sum-stats" id="sum-stats"></div>
-    <div class="sum-breakdown" id="sum-breakdown"></div>
-    <div class="donut-row">
-      <svg id="donut-svg" width="140" height="140" viewBox="0 0 140 140" aria-label="Review results chart"></svg>
-      <div class="donut-legend" id="donut-legend"></div>
+    <div class="sum-h">Review Complete — Drawing 40-B</div>
+    <div class="sum-sub">Here is what was covered in this session.</div>
+    <div class="sum-progress-card" id="sum-progress-card"></div>
+    <div class="tbl-wrap">
+      <table class="rev-tbl">
+        <thead><tr><th>Item ID</th><th>Type</th><th>Floor</th><th>Est. Value</th><th>AI Confidence</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody id="rev-tbody"></tbody>
+      </table>
     </div>
-    <div style="font-size:13px;color:var(--g600);margin-bottom:24px;padding:12px 16px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe">
-      In production, flagged items are routed to the project lead's review queue before BoQ is finalised.
-    </div>
-    <table class="rev-tbl">
-      <thead><tr><th>Item ID</th><th>Type</th><th>Floor</th><th>Value</th><th>Conf.</th><th>Status</th><th>Note</th></tr></thead>
-      <tbody id="rev-tbody"></tbody>
-    </table>
-    <div class="exp-box" id="tour-export">
-      <div class="exp-h">Export BoQ</div>
-      <div class="exp-desc">Export generates a structured Bill of Quantities with accepted quantities, corrections logged, and flagged items marked for team review.</div>
+    <div class="val-summary" id="val-summary"></div>
+    <div class="exp-box">
+      <div class="exp-h">Export Bill of Quantities</div>
+      <div class="exp-desc">Export generates a structured BoQ with accepted quantities, corrections logged, and flagged items marked for project lead review.</div>
       <div class="exp-btns">
-        <button class="btn btn-green" onclick="doExport('excel')">⬇ Export BoQ · Excel</button>
-        <button class="btn btn-outline" onclick="doExport('pdf')">⬇ Export BoQ · PDF</button>
+        <button class="btn btn-green" onclick="doExport('csv')">⬇ Export BoQ as CSV</button>
+        <button class="btn btn-outline" onclick="doExport('pdf')">⬇ Export BoQ as PDF</button>
       </div>
-      <div class="exp-note">Excel downloads a CSV file. PDF opens a print-friendly view.</div>
     </div>
-    <div style="margin-top:24px;text-align:center">
+    <div class="assumptions" style="margin-top:20px">
+      <h4>Production note</h4>
+      <p style="font-size:14px;color:var(--g600);line-height:1.6">In production, flagged items are automatically routed to the project lead's review queue before the BoQ is finalised. This prevents unresolved items from reaching the field team.<br><br><em>[ASSUMPTION: CSV and PDF export are client-side only in this demo — production would generate server-side signed documents.]</em></p>
+    </div>
+    <div style="margin-top:28px;text-align:center">
       <button class="btn btn-outline" onclick="resetAll()">↺ Start New Review</button>
     </div>
   </div>
@@ -975,17 +990,17 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 </div><!-- /proto-view -->
 
 <!-- Tooltip -->
-<div id="tip" role="tooltip" aria-live="polite"></div>
+<div id="tip" role="tooltip"></div>
 
 <!-- Tour overlay -->
-<div id="tour" role="dialog" aria-modal="true" aria-label="Guided tour">
+<div id="tour" role="dialog" aria-modal="true">
   <div id="tour-back" onclick="endTour()"></div>
   <div id="tour-spot"></div>
   <div id="tour-tip">
     <h4 id="tour-h"></h4>
     <p id="tour-p"></p>
     <div class="tour-row">
-      <span class="tour-skip" onclick="endTour()" tabindex="0" role="button" onkeydown="if(event.key==='Enter')endTour()">Skip tour</span>
+      <span class="tour-skip" onclick="endTour()">Skip tour</span>
       <span class="tour-prog" id="tour-prog"></span>
       <button class="tour-next" id="tour-next-btn" onclick="tourNext()">Next</button>
     </div>
@@ -993,60 +1008,65 @@ kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px
 </div>
 
 <!-- Toast -->
-<div id="toast" role="alert" aria-live="polite">
+<div id="toast" role="alert">
   <div class="t-icon">✓</div>
   <span id="toast-msg"></span>
 </div>
 
 <!-- Print area -->
-<div id="print-area">
-  <div id="print-content"></div>
-</div>
+<div id="print-summary"></div>
 
 <script>
-// DATA
+// ── ITEMS (ASSUMPTION: fabricated for demo; real data from Beam AI pipeline) ──
 const ITEMS=[
-  {id:'AHU-03',name:'Air Handling Unit',loc:'F4',val:38400,conf:61,risk:'high',flag:'Overlapping bounding box with AHU-02 — possible double-count. Verify equipment schedule.',sched:[{u:'AHU-01',s:'match'},{u:'AHU-02',s:'match'},{u:'AHU-03',s:'rev'}]},
-  {id:'RTU-01',name:'Rooftop Unit',loc:'Roof',val:42000,conf:65,risk:'high',flag:'Detected at roof level but not in rooftop equipment schedule. Verify with architectural plans.',sched:[{u:'RTU-01',s:'rev'},{u:'RTU-02',s:'match'}]},
-  {id:'AHU-07',name:'Air Handling Unit',loc:'F2',val:24200,conf:58,risk:'high',flag:'Bounding box dimensions inconsistent with AHU schedule — may be misclassified RTU.',sched:[{u:'AHU-06',s:'match'},{u:'AHU-07',s:'rev'},{u:'AHU-08',s:'match'}]},
-  {id:'VAV-12',name:'Variable Air Volume',loc:'F3 Zone B',val:2100,conf:74,risk:'high',flag:'Symbol partially obscured by revision cloud on sheet M-3.',sched:[{u:'VAV-11',s:'match'},{u:'VAV-12',s:'rev'}]},
-  {id:'FCU-15',name:'Fan Coil Unit',loc:'F3',val:3200,conf:81,risk:'med',flag:'Unit type ambiguous — could be FCU or AHU based on symbol size.',sched:[{u:'FCU-14',s:'match'},{u:'FCU-15',s:'rev'}]},
-  {id:'VAV-08',name:'Variable Air Volume',loc:'F1',val:1800,conf:79,risk:'med',flag:'Symbol clarity low — partially hidden by dimension line.',sched:[{u:'VAV-08',s:'rev'},{u:'VAV-09',s:'match'}]},
-  {id:'DP-22',name:'Damper',loc:'F2',val:450,conf:77,risk:'med',flag:'Size annotation missing from drawing — defaulted to standard 12".',sched:[{u:'DP-22',s:'rev'}]},
-  {id:'SD-44',name:'Supply Diffuser',loc:'F2 R204',val:85,conf:83,risk:'med',flag:'Detected size 24×24; spec schedule references 18×18 for this zone.',sched:[{u:'SD-44',s:'rev'}]},
-  {id:'FD-118',name:'Flex Duct',loc:'F1',val:22,conf:96,risk:'low',flag:null,sched:[]},
-  {id:'GR-09',name:'Grille',loc:'F1',val:45,conf:94,risk:'low',flag:null,sched:[]},
-  {id:'TD-33',name:'Thermal Duct',loc:'F2',val:18,conf:97,risk:'low',flag:null,sched:[]},
-  {id:'FD-201',name:'Flex Duct',loc:'F3',val:30,conf:95,risk:'low',flag:null,sched:[]},
+  {id:'AHU-03',type:'Air Handling Unit',floor:'Floor 4',value:38400,confidence:61,risk:'HIGH',qty:1,unitType:'Rooftop Package',capacity:'20 Ton'},
+  {id:'AHU-07',type:'Air Handling Unit',floor:'Floor 6',value:35200,confidence:58,risk:'HIGH',qty:1,unitType:'Rooftop Package',capacity:'15 Ton'},
+  {id:'VAV-12',type:'Variable Air Volume',floor:'Floor 3',value:2100,confidence:74,risk:'HIGH',qty:1,unitType:'Single Duct',capacity:'1200 CFM'},
+  {id:'VAV-31',type:'Variable Air Volume',floor:'Floor 5',value:1950,confidence:69,risk:'HIGH',qty:1,unitType:'Fan Powered',capacity:'800 CFM'},
+  {id:'EF-09',type:'Exhaust Fan',floor:'Floor 2',value:4200,confidence:77,risk:'HIGH',qty:2,unitType:'Centrifugal',capacity:'3000 CFM'},
+  {id:'SD-44',type:'Supply Diffuser',floor:'Floor 2',value:85,confidence:83,risk:'MEDIUM',qty:1,unitType:'Perforated Face',capacity:'150 CFM'},
+  {id:'SD-71',type:'Supply Diffuser',floor:'Floor 3',value:85,confidence:88,risk:'MEDIUM',qty:3,unitType:'Perforated Face',capacity:'150 CFM'},
+  {id:'FD-201',type:'Flex Duct',floor:'Floor 3',value:30,confidence:95,risk:'LOW',qty:1,unitType:'Flex Duct',capacity:'8 inch'},
 ]
 
-// STATE
+// ── STATE ──
 var curView='cs',curStep=1,unlockedStep=1
 var activeFilter='all',selectedIdx=0
-var reviews={},corrections={},flagReasons={}
+var sessionState={} // id -> {status,correctedQty,correctedType,correctionNote,flagReason}
 var curDetailId=null,openPanel=null
-var reviewStart=null
 var tourActive=false,tourStops=[],tourIdx=0
 var tourShown={1:false,2:false,3:false,4:false}
 
-// TOOLTIP DATA
-const TIPS={
-  'src-annot':'Sourced from estimator interviews across 6 firms. Commercial HVAC drawings, 20–60 sheets per set.',
-  'src-time':'Self-reported in interviews. No instrumentation baseline yet — to be validated in v0 beta.',
-  'src-ahu':'RSMeans 2024: 20-ton rooftop package unit. Includes equipment, labour, and rework overhead.',
-  'src-err':'Assumed from estimator recall of past rework frequency. Requires field integration (v2) to instrument properly.',
-  'm-time':'Baseline 90 min (interview). Target set at 72% reduction — validated if 8 of 10 beta sessions complete under 25 min.',
-  'm-accept':'No baseline exists. 82% chosen as minimum viable trust signal based on comparable AI review tools in adjacent industries.',
-  'm-error':'Assumed from estimator recall of past rework frequency. Requires field integration (v2) to instrument properly.',
-  'ai-conf':'How certain the AI is about this annotation. Below 70% = High Risk. Score combines symbol clarity, overlap, scale, and historical accuracy.',
-  'est-val':'RSMeans 2024 HVAC unit costs — not live pricing. Actual cost depends on project specs and vendor quotes.',
-  'double-count':'Two annotations within 2ft with overlapping bounding boxes. One may be a duplicate. Verify equipment schedule.',
-  'rev-complete':'All High-Risk items reviewed + overall review rate >60%. Both conditions required before export unlocks.',
+function initSession(){
+  sessionState={}
+  ITEMS.forEach(it=>{
+    sessionState[it.id]={status:'Pending',correctedQty:null,correctedType:null,correctionNote:'',flagReason:''}
+  })
 }
 
-function iIcon(tip){return`<span class="ii" data-tip="${tip}" tabindex="0" role="button" aria-label="More info"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span>`}
+// ── TOOLTIP DATA ──
+const TIPS={
+  'src-annot':'From estimator interviews across 6 HVAC firms. Commercial drawings, 20–60 sheets per set. Not yet instrumented in product.',
+  'src-time':'Self-reported in interviews. No session-level instrumentation exists yet. To be validated in Phase 1 beta.',
+  'src-ahu':'RSMeans 2024: 20-ton rooftop package unit. Includes equipment, installation labour, and rework overhead. Confirmed with 2 estimators.',
+  'm-time':'72% reduction from 90-min baseline. Validated if 8 of 10 beta sessions complete under 25 min.',
+  'm-accept':'No baseline exists. 82% is the minimum signal threshold for the ranking to be trustworthy. Informed by analogous AI review tools.',
+  'm-error':'Based on estimator recall of past rework frequency. Requires field integration to instrument properly (Phase 3 dependency).',
+  'ai-conf':'How certain the AI is about this annotation. Below 75% = High Risk. Score combines symbol clarity, overlap, scale, and historical accuracy.',
+  'est-val':'RSMeans 2024 HVAC unit costs — not live pricing. Actual cost depends on project specs and vendor quotes.',
+}
 
-// VIEW SWITCHING
+function iIcon(tip){return`<span class="ii" data-tip="${tip}" tabindex="0" role="button"><svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" stroke="#9CA3AF" stroke-width="1" fill="none"/><text x="7" y="11" text-anchor="middle" font-size="9" fill="#6B7280" font-family="sans-serif">i</text></svg></span>`}
+
+function getRiskAlert(it){
+  if(it.risk!=='HIGH')return null
+  if(it.id.startsWith('AHU'))return'Overlapping bounding box detected — possible double-count. Verify against equipment schedule before accepting.'
+  if(it.id.startsWith('VAV'))return`Low confidence detection — symbol may be partially obscured. Check floor plan grid ${it.floor} for clarity.`
+  if(it.id.startsWith('EF'))return'Quantity flagged — 2 units detected at same grid reference. Confirm with mechanical schedule.'
+  return'Low confidence score. Verify symbol match on drawing.'
+}
+
+// ── VIEWS ──
 function showView(v){
   curView=v
   document.getElementById('cs-view').style.display=v==='cs'?'block':'none'
@@ -1054,42 +1074,37 @@ function showView(v){
   document.getElementById('cs-pills').style.display=v==='cs'?'flex':'none'
   document.getElementById('proto-pills').style.display=v==='proto'?'flex':'none'
   document.getElementById('nav-cta').style.display=v==='cs'?'block':'none'
-  if(v==='proto'){
-    goStep(curStep)
-    if(!tourShown[curStep])setTimeout(()=>startTour(curStep),600)
-  }else{
-    window.scrollTo({top:0,behavior:'smooth'})
-    setupIntersection()
-  }
+  if(v==='proto'){goStep(curStep);if(!tourShown[curStep])setTimeout(()=>startTour(curStep),600)}
+  else{window.scrollTo({top:0,behavior:'smooth'});setupIntersection()}
 }
 
-function navScroll(id){
-  const el=document.getElementById(id)
-  if(el)el.scrollIntoView({behavior:'smooth'})
+function openProto(){
+  // Reset state on open (per spec: reset if previous session exists)
+  if(Object.keys(sessionState).length)resetAll()
+  showView('proto')
 }
 
-// INTERSECTION OBSERVER
+function navScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth'})}
+
 function setupIntersection(){
-  const secs=['s1','s2','s3','s4','s5']
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{
       if(e.isIntersecting){
         document.querySelectorAll('.nav-pill').forEach(p=>p.classList.remove('active'))
-        const pill=document.querySelector(`.nav-pill[data-section="${e.target.id}"]`)
-        if(pill)pill.classList.add('active')
+        const p=document.querySelector(`.nav-pill[data-section="${e.target.id}"]`)
+        if(p)p.classList.add('active')
       }
     })
   },{rootMargin:'-45% 0px -50% 0px'})
-  secs.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el)})
+  ;['s1','s2','s3','s4','s5'].forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el)})
 }
 
-// PROTOTYPE STEPS
+// ── STEPS ──
 function goStep(n){
   if(n>unlockedStep)return
   curStep=n
   document.querySelectorAll('.proto-step-view').forEach(el=>el.classList.remove('active'))
-  const el=document.getElementById('pstep'+n)
-  if(el)el.classList.add('active')
+  const el=document.getElementById('pstep'+n);if(el)el.classList.add('active')
   updateCrumbs()
   if(n===2)renderQueue()
   if(n===4)renderSummary()
@@ -1098,21 +1113,16 @@ function goStep(n){
 }
 
 function jumpStep(n){if(n<=unlockedStep)goStep(n)}
-
 function unlockStep(n){if(n>unlockedStep)unlockedStep=n;updateCrumbs()}
 
 function updateCrumbs(){
   for(var i=1;i<=4;i++){
-    const el=document.getElementById('sc'+i)
-    if(!el)continue
-    el.className='proto-step'
-    if(i===curStep)el.classList.add('active')
-    else if(i<=unlockedStep)el.classList.add('done')
-    else el.classList.add('locked')
+    const el=document.getElementById('sc'+i);if(!el)continue
+    el.className='proto-step'+(i===curStep?' active':i<=unlockedStep?' done':' locked')
   }
 }
 
-// STEP 1
+// ── STEP 1 ──
 function dzDrag(e,over){e.preventDefault();document.getElementById('drop-zone').classList.toggle('over',over)}
 function dzDrop(e){e.preventDefault();dzDrag(e,false);startUpload('custom')}
 
@@ -1121,46 +1131,37 @@ function startUpload(type){
   document.getElementById('drop-zone').style.pointerEvents='none'
   const prog=document.getElementById('up-progress')
   const fill=document.getElementById('up-fill')
-  const lbl=document.getElementById('up-plbl')
   prog.classList.add('on')
-  lbl.textContent=type==='sample'?'Processing drawing 40-B…':'Processing uploaded drawing…'
   let pct=0
   const iv=setInterval(()=>{
-    pct+=type==='sample'?5:4
+    pct+=type==='sample'?8:5
     fill.style.width=Math.min(pct,100)+'%'
     if(pct>=100){
       clearInterval(iv)
-      lbl.textContent='✓ Analysis complete — 452 annotations detected'
-      setTimeout(()=>{unlockStep(2);goStep(2);reviewStart=Date.now()},500)
+      document.getElementById('up-plbl').textContent='✓ Analysis complete — 8 items ready for review'
+      initSession()
+      setTimeout(()=>{unlockStep(2);goStep(2)},500)
     }
   },80)
 }
 
-// STEP 2: FILTER & RENDER
+// ── STEP 2 ──
 function setFilter(f){
   activeFilter=f
   document.querySelectorAll('.ftab').forEach(t=>{
     t.className='ftab'
-    if(t.dataset.f===f){
-      const map={all:'fa',high:'fh',med:'fm',low:'fl',flag:'ff'}
-      t.classList.add(map[f]||'fa')
-      t.setAttribute('aria-selected','true')
-    }else{
-      t.setAttribute('aria-selected','false')
-    }
+    if(t.dataset.f===f){const map={all:'fa',HIGH:'fh',MEDIUM:'fm',LOW:'fl',flag:'ff'};t.classList.add(map[f]||'fa');t.setAttribute('aria-selected','true')}
+    else t.setAttribute('aria-selected','false')
   })
+  selectedIdx=0
   renderQueue()
 }
 
 function getFiltered(){
-  const f=activeFilter
   return ITEMS.filter(it=>{
-    if(f==='all')return true
-    if(f==='high')return it.risk==='high'
-    if(f==='med')return it.risk==='med'
-    if(f==='low')return it.risk==='low'
-    if(f==='flag')return reviews[it.id]==='flagged'
-    return true
+    if(activeFilter==='all')return true
+    if(activeFilter==='flag')return sessionState[it.id]?.status==='Flagged'
+    return it.risk===activeFilter
   })
 }
 
@@ -1172,126 +1173,102 @@ function renderQueue(){
   if(!list.length){empty.style.display='block';return}
   empty.style.display='none'
   list.forEach((it,idx)=>{
-    const st=reviews[it.id]
-    const rclass=it.risk==='high'?'ih':it.risk==='med'?'im':'il'
-    const rtext=it.risk==='high'?'HIGH RISK':it.risk==='med'?'MEDIUM':'LOW'
-    const rpclass=it.risk==='high'?'rh':it.risk==='med'?'rm':'rl'
-    const cclass=it.risk==='high'?'ch':it.risk==='med'?'cm':'cl'
-    const sbadge=st?`<span class="ic-sbadge s${st[0]}">${st==='accepted'?'✓ ACCEPTED':st==='corrected'?'✏ CORRECTED':'⚑ FLAGGED'}</span>`:''
+    const st=sessionState[it.id]||{}
+    const status=st.status||'Pending'
+    const rclass=it.risk==='HIGH'?'ih':it.risk==='MEDIUM'?'im':'il'
+    const rpclass=it.risk==='HIGH'?'rh':it.risk==='MEDIUM'?'rm':'rl'
+    const cclass=it.risk==='HIGH'?'ch':it.risk==='MEDIUM'?'cm':'cl'
+    const isDone=status!=='Pending'
     const card=document.createElement('div')
-    card.className=`ic ${rclass}${st?' done':''}${idx===selectedIdx?' sel':''}`
+    card.className=`ic ${rclass}${isDone?' done':''}${idx===selectedIdx?' sel':''}`
     card.setAttribute('role','listitem')
-    card.setAttribute('aria-label',`${it.id}, ${it.name}, ${it.risk} risk, $${it.val.toLocaleString()}`)
     card.setAttribute('tabindex','0')
     card.dataset.idx=idx
+    const statusHTML=isDone?`<div class="ic-status"><div class="st-dot" style="background:${status==='Accepted'?'var(--green)':status==='Corrected'?'var(--orange)':'var(--red)'}"></div><span style="color:${status==='Accepted'?'var(--green)':status==='Corrected'?'#92400e':'var(--red)'}">${status}</span></div>`:''
     card.innerHTML=`
-      ${sbadge}
       <div class="ic-top">
-        <div><div class="ic-id">${it.id}</div><div class="ic-desc">${it.name} · ${it.loc}</div></div>
-        <div class="ic-right">
-          <div class="ic-val">$${it.val.toLocaleString()}</div>
-          <span class="rpill ${rpclass}">${rtext}</span>
-        </div>
+        <div><div class="ic-id">${it.id}</div><div class="ic-desc">${it.type} · ${it.floor}</div></div>
+        <div class="ic-right"><div class="ic-val">$${it.value.toLocaleString()}</div><span class="rpill ${rpclass}">${it.risk}</span></div>
       </div>
       <div class="conf-row">
-        <span class="conf-lbl">AI conf ${iIcon('ai-conf')}</span>
-        <div class="conf-track"><div class="conf-bar ${cclass}" style="width:${it.conf}%"></div></div>
-        <span class="conf-pct ${cclass}">${it.conf}%</span>
-      </div>`
+        <span class="conf-lbl">Confidence ${iIcon('ai-conf')}</span>
+        <div class="conf-track"><div class="conf-bar ${cclass}" style="width:${it.confidence}%"></div></div>
+        <span class="conf-pct ${cclass}">${it.confidence}%</span>
+      </div>
+      ${statusHTML}`
     card.onclick=()=>openDetail(ITEMS.indexOf(it))
     card.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')openDetail(ITEMS.indexOf(it))}
     grid.appendChild(card)
   })
   updateProgress()
-  updateFlagCount()
-  const cb=document.getElementById('complete-btn')
-  cb.style.display=Object.keys(reviews).length>=3?'block':'none'
   bindTooltips()
 }
 
 function updateProgress(){
-  const done=Object.keys(reviews).length
-  const total=452,base=41
-  const pct=Math.round(((done+base)/total)*100)
-  const highDone=ITEMS.filter(it=>it.risk==='high'&&reviews[it.id]).length
-  const highRem=ITEMS.filter(it=>it.risk==='high').length-highDone
+  const done=ITEMS.filter(it=>sessionState[it.id]?.status!=='Pending').length
+  const pct=Math.round((done/ITEMS.length)*100)
   document.getElementById('q-prog-fill').style.width=pct+'%'
-  document.getElementById('q-prog-lbl').textContent=`${base+done} of ${total} reviewed · ${pct}% · ${highRem} high-risk remaining`
+  document.getElementById('q-prog-lbl').textContent=`${done} of ${ITEMS.length} reviewed · ${pct}%`
+  document.getElementById('cnt-flag').textContent=ITEMS.filter(it=>sessionState[it.id]?.status==='Flagged').length
+  const allHighDone=ITEMS.filter(it=>it.risk==='HIGH').every(it=>sessionState[it.id]?.status!=='Pending')
+  const btn=document.getElementById('complete-btn')
+  btn.disabled=!allHighDone
+  btn.title=allHighDone?'':'Clear all 5 high-risk items first.'
 }
 
-function updateFlagCount(){
-  const f=Object.values(reviews).filter(v=>v==='flagged').length
-  const fc=document.getElementById('fc')
-  if(fc)fc.textContent=f
+function tryComplete(){
+  const allHighDone=ITEMS.filter(it=>it.risk==='HIGH').every(it=>sessionState[it.id]?.status!=='Pending')
+  if(!allHighDone){showToast('Clear all 5 high-risk items first.');return}
+  unlockStep(4);goStep(4)
 }
 
-function checkComplete(){
-  const highDone=ITEMS.filter(it=>it.risk==='high').every(it=>reviews[it.id])
-  if(highDone||Object.keys(reviews).length>=3){unlockStep(4);goStep(4)}
-  else showToast('Review all High Risk items first, or continue reviewing.')
-}
-
-// STEP 3: DETAIL VIEW
+// ── STEP 3 ──
 function openDetail(globalIdx){
-  curDetailId=ITEMS[globalIdx]?.id
-  if(!curDetailId)return
+  const it=ITEMS[globalIdx];if(!it)return
+  curDetailId=it.id
   closePanel()
-  unlockStep(3)
-  goStep(3)
+  unlockStep(3);goStep(3)
   renderDetail()
 }
 
 function renderDetail(){
-  const it=ITEMS.find(i=>i.id===curDetailId)
-  if(!it)return
+  const it=ITEMS.find(i=>i.id===curDetailId);if(!it)return
   const gi=ITEMS.indexOf(it)
-  const st=reviews[it.id]
-  const corr=corrections[it.id]||{}
+  const st=sessionState[it.id]||{}
+  const status=st.status||'Pending'
+  const isDone=status!=='Pending'
+  const cQty=st.correctedQty!==null?st.correctedQty:it.qty
+  const cType=st.correctedType||it.type
 
   document.getElementById('dv-id-crumb').textContent=it.id
   document.getElementById('dv-id').textContent=it.id
-  document.getElementById('dv-sub').textContent=`${it.name} · ${it.loc}`
-  document.getElementById('dv-val').textContent='$'+it.val.toLocaleString()
+  document.getElementById('dv-sub').textContent=`${it.type} · ${it.floor}`
 
-  const riskEl=document.getElementById('dv-risk')
-  riskEl.textContent=it.risk==='high'?'HIGH RISK':it.risk==='med'?'MEDIUM':'LOW'
-  riskEl.className='rpill '+(it.risk==='high'?'rh':it.risk==='med'?'rm':'rl')
+  const rpclass=it.risk==='HIGH'?'rh':it.risk==='MEDIUM'?'rm':'rl'
+  document.getElementById('dv-badges').innerHTML=`<span class="rpill ${rpclass}">${it.risk}</span><span class="dv-val" style="font-size:22px;font-weight:700;color:var(--g900)">$${it.value.toLocaleString()}</span>${iIcon('est-val')}`
 
-  const qty=corr.qty!==undefined?corr.qty:'1'
-  const type=corr.type||it.name
   document.getElementById('dv-tbl').innerHTML=`
-    <tr><td>Qty</td><td>${qty} unit</td></tr>
-    <tr><td>Type</td><td>${type}</td></tr>
-    <tr><td>Location</td><td>${it.loc}</td></tr>
-    <tr><td>Est. Value</td><td>$${it.val.toLocaleString()} ${iIcon('est-val')}</td></tr>
-    <tr><td>AI Confidence</td><td>${it.conf}% — ${it.risk==='high'?'High Risk':it.risk==='med'?'Medium':'Low'} ${iIcon('ai-conf')}</td></tr>`
+    <tr><td>Qty</td><td>${cQty} unit${cQty>1?'s':''}</td></tr>
+    <tr><td>Type</td><td>${cType}</td></tr>
+    <tr><td>Capacity</td><td>${it.capacity}</td></tr>
+    <tr><td>Location</td><td>${it.floor}</td></tr>
+    <tr><td>Est. Value</td><td>$${it.value.toLocaleString()}</td></tr>
+    <tr><td>AI Confidence</td><td>${it.confidence}% ${iIcon('ai-conf')}</td></tr>`
 
-  const flagBox=document.getElementById('dv-flag')
-  const flagTxt=document.getElementById('dv-flag-txt')
-  if(it.flag){flagBox.style.display='block';flagTxt.textContent=it.flag}
-  else flagBox.style.display='none'
+  const alertMsg=getRiskAlert(it)
+  const alertEl=document.getElementById('dv-alert')
+  if(alertMsg){alertEl.style.display='block';document.getElementById('dv-alert-txt').textContent=alertMsg}
+  else alertEl.style.display='none'
 
-  const sb=document.getElementById('dv-sched-body')
-  if(it.sched&&it.sched.length){
-    sb.innerHTML=it.sched.map(r=>`<tr class="${r.s==='rev'?'rev':''}"><td>${r.u}</td><td class="${r.s==='rev'?'revtag':'match'}">${r.s==='rev'?'← Reviewing':'✓ Match'}</td></tr>`).join('')
-    document.getElementById('dv-sched').style.display='table'
-  }else{
-    document.getElementById('dv-sched').style.display='none'
-  }
+  document.getElementById('btn-acc').disabled=isDone
+  document.getElementById('btn-cor').disabled=isDone
+  document.getElementById('btn-flg').disabled=isDone
 
-  const dis=!!st
-  document.getElementById('btn-acc').disabled=dis
-  document.getElementById('btn-cor').disabled=dis
-  document.getElementById('btn-flg').disabled=dis
-
-  const banner=document.getElementById('dv-done-banner')
-  if(st){
-    const fr=flagReasons[it.id]
-    banner.textContent=st==='accepted'?'✓ Accepted':st==='corrected'?'✏ Correction saved':fr?`⚑ Flagged: ${fr.reason}`:'⚑ Flagged for review'
-    banner.classList.add('on')
-  }else{
-    banner.classList.remove('on')
-  }
+  const conf=document.getElementById('dv-confirm')
+  if(isDone){
+    conf.textContent=status==='Accepted'?'✓ Accepted':status==='Corrected'?'✏ Correction saved':'⚑ Flagged for review'
+    conf.className='inline-confirm on '+(status==='Accepted'?'acc':status==='Corrected'?'cor':'flg')
+  }else conf.className='inline-confirm'
 
   document.getElementById('dv-prev').disabled=gi===0
   document.getElementById('dv-next').disabled=gi===ITEMS.length-1
@@ -1305,29 +1282,23 @@ function dvNav(dir){
   if(next){curDetailId=next.id;closePanel();renderDetail()}
 }
 
-// ACCEPT
-function doAction(action){
+function doAccept(){
   if(!curDetailId)return
-  reviews[curDetailId]=action
-  renderDetail()
-  updateProgress()
-  updateFlagCount()
+  sessionState[curDetailId].status='Accepted'
+  renderDetail();updateProgress()
   const gi=ITEMS.findIndex(i=>i.id===curDetailId)
-  const next=ITEMS.slice(gi+1).find(i=>i.risk==='high'&&!reviews[i.id])
-  if(next)setTimeout(()=>{curDetailId=next.id;renderDetail()},350)
-  if(Object.keys(reviews).length>=3){const cb=document.getElementById('complete-btn');if(cb)cb.style.display='block'}
-  const allHighDone=ITEMS.filter(i=>i.risk==='high').every(i=>reviews[i.id])
-  if(allHighDone)setTimeout(()=>{unlockStep(4);goStep(4)},600)
+  const next=ITEMS.slice(gi+1).find(i=>sessionState[i.id]?.status==='Pending')
+  if(next)setTimeout(()=>{curDetailId=next.id;renderDetail()},800)
+  else setTimeout(()=>updateProgress(),100)
 }
 
-// CORRECT PANEL
 function openCorrectPanel(){
-  if(!curDetailId||reviews[curDetailId])return
+  if(!curDetailId||sessionState[curDetailId]?.status!=='Pending')return
   const it=ITEMS.find(i=>i.id===curDetailId)
-  const prev=corrections[curDetailId]||{}
-  document.getElementById('cor-qty').value=prev.qty!==undefined?prev.qty:'1'
-  document.getElementById('cor-type').value=prev.type||(it?it.name:'')
-  document.getElementById('cor-note').value=prev.note||''
+  const st=sessionState[curDetailId]||{}
+  document.getElementById('cor-qty').value=st.correctedQty!==null?st.correctedQty:it.qty
+  document.getElementById('cor-type').value=st.correctedType||it.type
+  document.getElementById('cor-note').value=st.correctionNote||''
   document.getElementById('inline-correct').style.display='block'
   document.getElementById('inline-flag').style.display='none'
   openPanel='correct'
@@ -1336,42 +1307,40 @@ function openCorrectPanel(){
 
 function saveCorrection(){
   if(!curDetailId)return
-  const qty=document.getElementById('cor-qty').value
-  const type=document.getElementById('cor-type').value.trim()||ITEMS.find(i=>i.id===curDetailId)?.name
-  const note=document.getElementById('cor-note').value.trim()
-  corrections[curDetailId]={qty,type,note}
-  reviews[curDetailId]='corrected'
-  closePanel()
-  _postAction()
+  const st=sessionState[curDetailId]
+  st.status='Corrected'
+  st.correctedQty=parseInt(document.getElementById('cor-qty').value)||1
+  st.correctedType=document.getElementById('cor-type').value.trim()
+  st.correctionNote=document.getElementById('cor-note').value.trim()
+  closePanel();renderDetail();updateProgress()
+  const gi=ITEMS.findIndex(i=>i.id===curDetailId)
+  const next=ITEMS.slice(gi+1).find(i=>sessionState[i.id]?.status==='Pending')
+  if(next)setTimeout(()=>{curDetailId=next.id;renderDetail()},800)
 }
 
-// FLAG PANEL
 function openFlagPanel(){
-  if(!curDetailId||reviews[curDetailId])return
-  const prev=flagReasons[curDetailId]||{}
-  document.querySelectorAll('input[name="flag-reason"]').forEach(r=>{r.checked=r.value===prev.reason})
-  const noteEl=document.getElementById('flag-note')
-  noteEl.value=prev.note||''
-  noteEl.style.display=prev.reason==='Other'?'block':'none'
+  if(!curDetailId||sessionState[curDetailId]?.status!=='Pending')return
+  document.querySelectorAll('input[name="fr"]').forEach(r=>r.checked=false)
+  document.getElementById('flag-note').style.display='none'
+  document.getElementById('flag-note').value=''
   document.getElementById('inline-flag').style.display='block'
   document.getElementById('inline-correct').style.display='none'
   openPanel='flag'
 }
 
-function onFlagReasonChange(el){
-  document.getElementById('flag-note').style.display=el.value==='Other'?'block':'none'
-}
+function onFlagChange(el){document.getElementById('flag-note').style.display=el.value==='Other'?'block':'none'}
 
 function confirmFlag(){
   if(!curDetailId)return
-  const checked=document.querySelector('input[name="flag-reason"]:checked')
+  const checked=document.querySelector('input[name="fr"]:checked')
   if(!checked){showToast('Please select a flag reason.');return}
-  const reason=checked.value
-  const note=reason==='Other'?document.getElementById('flag-note').value.trim():''
-  flagReasons[curDetailId]={reason,note}
-  reviews[curDetailId]='flagged'
-  closePanel()
-  _postAction()
+  const st=sessionState[curDetailId]
+  st.status='Flagged'
+  st.flagReason=checked.value==='Other'?(document.getElementById('flag-note').value.trim()||'Other'):checked.value
+  closePanel();renderDetail();updateProgress()
+  const gi=ITEMS.findIndex(i=>i.id===curDetailId)
+  const next=ITEMS.slice(gi+1).find(i=>sessionState[i.id]?.status==='Pending')
+  if(next)setTimeout(()=>{curDetailId=next.id;renderDetail()},800)
 }
 
 function closePanel(){
@@ -1380,155 +1349,111 @@ function closePanel(){
   openPanel=null
 }
 
-function _postAction(){
-  renderDetail()
-  updateProgress()
-  updateFlagCount()
-  const gi=ITEMS.findIndex(i=>i.id===curDetailId)
-  const next=ITEMS.slice(gi+1).find(i=>i.risk==='high'&&!reviews[i.id])
-  if(next)setTimeout(()=>{curDetailId=next.id;closePanel();renderDetail()},350)
-  if(Object.keys(reviews).length>=3){const cb=document.getElementById('complete-btn');if(cb)cb.style.display='block'}
-  const allHighDone=ITEMS.filter(i=>i.risk==='high').every(i=>reviews[i.id])
-  if(allHighDone)setTimeout(()=>{unlockStep(4);goStep(4)},600)
-}
-
-// DRAWING SVG
+// ── DRAWING SVG ──
 function renderDrawing(it){
   const svg=document.getElementById('drawing-svg')
   let d=`<defs><pattern id="gr" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0L0 0 0 24" fill="none" stroke="#c8d5e0" stroke-width=".5"/></pattern></defs>`
-  d+=`<rect width="600" height="340" fill="url(#gr)"/>`
-  d+=`<line x1="0" y1="170" x2="600" y2="170" stroke="#9fb6c8" stroke-width="1.5"/>`
-  d+=`<line x1="300" y1="0" x2="300" y2="340" stroke="#9fb6c8" stroke-width="1.5"/>`
-  d+=`<line x1="0" y1="85" x2="600" y2="85" stroke="#c8d5e0" stroke-width="1"/>`
-  d+=`<line x1="0" y1="255" x2="600" y2="255" stroke="#c8d5e0" stroke-width="1"/>`
-  d+=`<line x1="150" y1="0" x2="150" y2="340" stroke="#c8d5e0" stroke-width="1"/>`
-  d+=`<line x1="450" y1="0" x2="450" y2="340" stroke="#c8d5e0" stroke-width="1"/>`
-  for(var r=0;r<3;r++)for(var c=0;c<4;c++){
-    d+=`<text x="${c*150+6}" y="${r*113+12}" font-size="9" fill="#94a3b8" font-family="Inter,sans-serif">${String.fromCharCode(65+r)}${c+1}</text>`
+  d+=`<rect width="600" height="300" fill="url(#gr)"/>`
+  // Grid lines
+  d+=`<line x1="0" y1="150" x2="600" y2="150" stroke="#9fb6c8" stroke-width="1.5"/>`
+  d+=`<line x1="300" y1="0" x2="300" y2="300" stroke="#9fb6c8" stroke-width="1.5"/>`
+  d+=`<line x1="150" y1="0" x2="150" y2="300" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="450" y1="0" x2="450" y2="300" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="0" y1="100" x2="600" y2="100" stroke="#c8d5e0" stroke-width="1"/>`
+  d+=`<line x1="0" y1="200" x2="600" y2="200" stroke="#c8d5e0" stroke-width="1"/>`
+  // Grid labels A1-D4
+  const cols=['1','2','3','4'],rows=['A','B','C']
+  rows.forEach((r,ri)=>cols.forEach((c,ci)=>{
+    d+=`<text x="${ci*150+6}" y="${ri*100+14}" font-size="9" fill="#94a3b8" font-family="Inter,sans-serif">${r}${c}</text>`
+  }))
+  // Adjacent unit (for HIGH risk items)
+  if(it.risk==='HIGH'){
+    d+=`<rect x="155" y="55" width="130" height="90" fill="rgba(245,158,11,.06)" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 3" rx="3"/>`
+    d+=`<text x="160" y="50" font-size="9" fill="#b45309" font-weight="600" font-family="Inter,sans-serif">adj. unit</text>`
   }
-  d+=`<rect x="180" y="120" width="90" height="75" fill="rgba(245,158,11,.06)" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 3" rx="3"/>`
-  d+=`<text x="184" y="114" font-size="9" fill="#b45309" font-weight="600" font-family="Inter,sans-serif">adj. unit</text>`
-  d+=`<rect x="230" y="130" width="110" height="80" fill="rgba(220,38,38,.07)" stroke="#dc2626" stroke-width="2.5" rx="3"/>`
-  d+=`<text x="234" y="220" font-size="10" fill="#dc2626" font-weight="700" font-family="Inter,sans-serif">${it.id} detected</text>`
-  d+=`<text x="240" y="148" font-size="9" fill="#dc2626" font-family="Inter,sans-serif">Grid C-7 · ${it.loc}</text>`
-  d+=`<line x1="150" y1="170" x2="230" y2="170" stroke="#7c93a8" stroke-width="3"/>`
-  d+=`<line x1="340" y1="170" x2="450" y2="170" stroke="#7c93a8" stroke-width="3"/>`
-  d+=`<line x1="285" y1="85" x2="285" y2="130" stroke="#7c93a8" stroke-width="3"/>`
+  // Primary item
+  d+=`<rect x="200" y="105" width="140" height="90" fill="rgba(220,38,38,.07)" stroke="#dc2626" stroke-width="2.5" rx="3"/>`
+  d+=`<text x="206" y="188" font-size="10" fill="#dc2626" font-weight="700" font-family="Inter,sans-serif">${it.id} detected</text>`
+  d+=`<text x="206" y="123" font-size="9" fill="#dc2626" font-family="Inter,sans-serif">Grid B2-C3 · ${it.floor}</text>`
+  // Duct lines
+  d+=`<line x1="0" y1="150" x2="200" y2="150" stroke="#7c93a8" stroke-width="2.5"/>`
+  d+=`<line x1="340" y1="150" x2="600" y2="150" stroke="#7c93a8" stroke-width="2.5"/>`
   svg.innerHTML=d
 }
 
-// STEP 4: SUMMARY
+// ── STEP 4 ──
 function renderSummary(){
-  const entries=Object.entries(reviews)
-  const accepted=entries.filter(([,v])=>v==='accepted')
-  const corrected=entries.filter(([,v])=>v==='corrected')
-  const flagged=entries.filter(([,v])=>v==='flagged')
-  const total=entries.length
-  const highCleared=ITEMS.filter(i=>i.risk==='high'&&reviews[i.id]).length
-  const highTotal=ITEMS.filter(i=>i.risk==='high').length
+  const accepted=ITEMS.filter(i=>sessionState[i.id]?.status==='Accepted')
+  const corrected=ITEMS.filter(i=>sessionState[i.id]?.status==='Corrected')
+  const flagged=ITEMS.filter(i=>sessionState[i.id]?.status==='Flagged')
+  const total=accepted.length+corrected.length+flagged.length
+  const highCleared=ITEMS.filter(i=>i.risk==='HIGH'&&sessionState[i.id]?.status!=='Pending').length
+  const valOf=arr=>arr.reduce((s,i)=>s+i.value,0)
 
-  const valOf=arr=>arr.reduce((s,[id])=>s+(ITEMS.find(i=>i.id===id)?.val||0),0)
+  document.getElementById('sum-progress-card').innerHTML=`
+    <div style="font-size:15px;font-weight:600;color:var(--g900);margin-bottom:10px">${total} of ${ITEMS.length} items reviewed · ${highCleared} high-risk cleared</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="stat-pill sp-green">Accepted: ${accepted.length}</span>
+      <span class="stat-pill sp-amber">Corrected: ${corrected.length}</span>
+      <span class="stat-pill sp-red">Flagged: ${flagged.length}</span>
+    </div>`
 
-  document.getElementById('sum-progress').textContent=`${41+total} of 452 items reviewed · ${highCleared} of ${highTotal} high-risk cleared`
-
-  document.getElementById('sum-stats').innerHTML=`
-    <div class="ss"><div class="ss-val">${total}</div><div class="ss-lbl">Items reviewed</div></div>
-    <div class="ss"><div class="ss-val">${highCleared} of ${highTotal}</div><div class="ss-lbl">High-risk cleared</div></div>
-    <div class="ss"><div class="ss-val">${total?Math.round(accepted.length/total*100):0}%</div><div class="ss-lbl">Acceptance rate</div></div>
-    <div class="ss"><div class="ss-val">${flagged.length}</div><div class="ss-lbl">Flagged for review</div></div>`
-
-  document.getElementById('sum-breakdown').innerHTML=`
-    <div class="break-row"><span class="break-dot" style="background:var(--green)"></span><span class="break-lbl">Accepted:</span><span class="break-val">${accepted.length} items · $${valOf(accepted).toLocaleString()} total value</span></div>
-    <div class="break-row"><span class="break-dot" style="background:var(--blue)"></span><span class="break-lbl">Corrected:</span><span class="break-val">${corrected.length} items · $${valOf(corrected).toLocaleString()} total value</span></div>
-    <div class="break-row"><span class="break-dot" style="background:var(--red)"></span><span class="break-lbl">Flagged:</span><span class="break-val">${flagged.length} items · $${valOf(flagged).toLocaleString()} total value</span></div>`
-
-  drawDonut(accepted.length,corrected.length,flagged.length)
-
-  const tbody=document.getElementById('rev-tbody')
-  if(!total){
-    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--g400);padding:32px;font-style:italic">No items reviewed yet — go back to Step 2.</td></tr>`
-    return
-  }
-  tbody.innerHTML=entries.map(([id,st])=>{
-    const it=ITEMS.find(i=>i.id===id)
-    if(!it)return''
-    const corr=corrections[id]||{}
-    const fr=flagReasons[id]
-    const note=corr.note||(fr?`${fr.reason}${fr.note?': '+fr.note:''}`:'')
+  document.getElementById('rev-tbody').innerHTML=ITEMS.map(it=>{
+    const st=sessionState[it.id]||{}
+    const status=st.status||'Pending'
+    const note=st.correctionNote||(st.flagReason||'')
+    const chipClass=status==='Accepted'?'sa':status==='Corrected'?'sc':status==='Flagged'?'sf':'sp'
     return`<tr>
       <td><b>${it.id}</b></td>
-      <td>${corr.type||it.name}</td>
-      <td>${it.loc}</td>
-      <td>$${it.val.toLocaleString()}</td>
-      <td>${it.conf}%</td>
-      <td><span class="schip s${st[0]}">${st.toUpperCase()}</span></td>
-      <td style="font-size:12px;color:var(--g400);max-width:160px">${note}</td>
+      <td>${st.correctedType||it.type}</td>
+      <td>${it.floor}</td>
+      <td>$${it.value.toLocaleString()}</td>
+      <td>${it.confidence}%</td>
+      <td><span class="schip ${chipClass}">${status}</span></td>
+      <td style="font-size:12px;color:var(--g400);max-width:140px">${note}</td>
     </tr>`
   }).join('')
+
+  document.getElementById('val-summary').innerHTML=`
+    <div class="vs-row"><span>Total accepted value:</span><span style="color:var(--green);font-weight:600">$${valOf(accepted).toLocaleString()}</span></div>
+    <div class="vs-row"><span>Total corrected value:</span><span style="color:#92400e;font-weight:600">$${valOf(corrected).toLocaleString()} (corrections logged)</span></div>
+    <div class="vs-row"><span>Total flagged value:</span><span style="color:var(--red);font-weight:600">$${valOf(flagged).toLocaleString()} (routed to project lead)</span></div>`
 }
 
-function drawDonut(a,c,f){
-  const total=a+c+f
-  const svg=document.getElementById('donut-svg')
-  const leg=document.getElementById('donut-legend')
-  const R=52,cx=70,cy=70,stroke=20,circ=2*Math.PI*R
-  if(!total){
-    svg.innerHTML=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="14" fill="#94a3b8" font-family="Inter,sans-serif">0</text>`
-    leg.innerHTML=''
-    return
-  }
-  const segs=[{val:a,color:'#16a34a',label:'Accepted'},{val:c,color:'#2563eb',label:'Corrected'},{val:f,color:'#dc2626',label:'Flagged'}]
-  let offset=0
-  let circles=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"/>`
-  segs.forEach(s=>{
-    if(!s.val)return
-    const len=(s.val/total)*circ
-    circles+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`
-    offset+=len
-  })
-  circles+=`<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="22" font-weight="800" fill="#0f172a" font-family="Inter,sans-serif">${total}</text>`
-  circles+=`<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="Inter,sans-serif">reviewed</text>`
-  svg.innerHTML=circles
-  leg.innerHTML=segs.map(s=>`<div class="dl-item"><div class="dl-dot" style="background:${s.color}"></div><div class="dl-label">${s.label}</div><div class="dl-count">${s.val}</div></div>`).join('')
-}
-
-// EXPORT
 function doExport(type){
-  const rows=Object.entries(reviews).map(([id,st])=>{
-    const it=ITEMS.find(i=>i.id===id)
-    if(!it)return null
-    const corr=corrections[id]||{}
-    const fr=flagReasons[id]
-    const note=corr.note||(fr?`${fr.reason}${fr.note?': '+fr.note:''}`:'')
-    return[it.id,corr.type||it.name,it.loc,it.val,it.conf+'%',st.toUpperCase(),note]
-  }).filter(Boolean)
-
-  if(type==='excel'){
-    const headers=['Item ID','Type','Floor','Est. Value','AI Confidence','Status','Correction Note']
+  const today=new Date().toISOString().split('T')[0]
+  if(type==='csv'){
+    const headers=['Item ID','Type','Floor','Quantity','Unit Type','Capacity','Est. Value ($)','AI Confidence (%)','Status','Correction Note','Flag Reason']
+    const rows=ITEMS.map(it=>{
+      const st=sessionState[it.id]||{}
+      return[it.id,st.correctedType||it.type,it.floor,st.correctedQty!==null?st.correctedQty:it.qty,it.unitType,it.capacity,it.value,it.confidence+'%',st.status||'Pending',st.correctionNote||'',st.flagReason||'']
+    })
     const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n')
     const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'})
     const url=URL.createObjectURL(blob)
-    const a=document.createElement('a')
-    a.href=url;a.download='BoQ-Drawing40B.csv';a.click()
+    const a=document.createElement('a');a.href=url;a.download=`BoQ-Drawing-40B-${today}.csv`;a.click()
     URL.revokeObjectURL(url)
-    showToast('CSV downloaded — BoQ-Drawing40B.csv')
+    showToast(`CSV downloaded — BoQ-Drawing-40B-${today}.csv`)
   }else{
-    const printRows=rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')
-    document.getElementById('print-content').innerHTML=`
-      <h2 style="margin-bottom:8px">BoQ Review Summary: Drawing 40-B</h2>
-      <p style="margin-bottom:16px;color:#666">Exported: ${new Date().toLocaleDateString()} · Beam AI Quick Review</p>
-      <table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:11px">
-        <thead><tr style="background:#f5f5f5"><th>Item ID</th><th>Type</th><th>Floor</th><th>Est. Value</th><th>AI Conf.</th><th>Status</th><th>Note</th></tr></thead>
-        <tbody>${printRows||'<tr><td colspan="7" style="text-align:center">No items reviewed.</td></tr>'}</tbody>
-      </table>`
+    const rows=ITEMS.map(it=>{
+      const st=sessionState[it.id]||{}
+      const status=st.status||'Pending'
+      const note=st.correctionNote||(st.flagReason||'')
+      return`<tr><td>${it.id}</td><td>${st.correctedType||it.type}</td><td>${it.floor}</td><td>${st.correctedQty!==null?st.correctedQty:it.qty}</td><td>$${it.value.toLocaleString()}</td><td>${it.confidence}%</td><td>${status}</td><td>${note}</td></tr>`
+    }).join('')
+    document.getElementById('print-summary').innerHTML=`
+      <h2>BoQ Review Summary: Drawing 40-B</h2>
+      <div class="ps-meta">Beam AI · Quick Review Workflow · Exported: ${new Date().toLocaleDateString()}</div>
+      <table><thead><tr><th>Item ID</th><th>Type</th><th>Floor</th><th>Qty</th><th>Est. Value</th><th>AI Conf.</th><th>Status</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="ps-footer">Exported by: Naman Gautam — ${new Date().toLocaleDateString()} · [ASSUMPTION: client-side export only in this demo]</div>`
     window.print()
     showToast('Print dialog opened — save as PDF')
   }
 }
 
 function resetAll(){
-  reviews={};corrections={};flagReasons={};openPanel=null
-  curDetailId=null;reviewStart=null;curStep=1;unlockedStep=1
+  sessionState={};curDetailId=null;openPanel=null
+  curStep=1;unlockedStep=1
   tourShown={1:false,2:false,3:false,4:false}
   closePanel()
   document.getElementById('sample-btn').disabled=false
@@ -1536,34 +1461,32 @@ function resetAll(){
   document.getElementById('up-progress').classList.remove('on')
   document.getElementById('up-fill').style.width='0'
   goStep(1)
-  if(!tourShown[1])setTimeout(()=>startTour(1),600)
 }
 
-// KEYBOARD
+// ── KEYBOARD ──
 document.addEventListener('keydown',e=>{
   if(tourActive){
     if(e.key==='Escape')endTour()
-    if(e.key==='ArrowRight'||e.key==='Enter'){if(document.getElementById('tour-next-btn')===document.activeElement)return;tourNext()}
+    if(e.key==='ArrowRight'||e.key==='Enter'){if(document.getElementById('tour-next-btn')!==document.activeElement)tourNext()}
     return
   }
   if(curView!=='proto')return
-  const inInput=document.activeElement&&['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)
+  const inInput=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)
   if(curStep===2&&!inInput){
     const filtered=getFiltered()
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){
       e.preventDefault()
       selectedIdx=Math.max(0,Math.min(filtered.length-1,selectedIdx+(e.key==='ArrowDown'?1:-1)))
       renderQueue()
-      const cards=document.querySelectorAll('#items-grid .ic')
-      if(cards[selectedIdx])cards[selectedIdx].scrollIntoView({block:'nearest',behavior:'smooth'})
+      document.querySelectorAll('#items-grid .ic')[selectedIdx]?.scrollIntoView({block:'nearest',behavior:'smooth'})
     }
     if(e.key==='Enter'){const f=getFiltered();if(f[selectedIdx])openDetail(ITEMS.indexOf(f[selectedIdx]))}
-    if(e.key==='a'||e.key==='A'){const f=getFiltered();const sel=f[selectedIdx];if(sel&&!reviews[sel.id]){curDetailId=sel.id;doAction('accepted')}}
+    if(e.key==='a'||e.key==='A'){const f=getFiltered();const sel=f[selectedIdx];if(sel&&sessionState[sel.id]?.status==='Pending'){curDetailId=sel.id;doAccept()}}
   }
   if(curStep===3){
     if(e.key==='Escape'){if(openPanel)closePanel();else goStep(2);return}
     if(inInput)return
-    if(e.key==='a'||e.key==='A')doAction('accepted')
+    if(e.key==='a'||e.key==='A')doAccept()
     if(e.key==='c'||e.key==='C')openCorrectPanel()
     if(e.key==='f'||e.key==='F')openFlagPanel()
     if(e.key==='ArrowLeft'&&!openPanel)dvNav(-1)
@@ -1571,7 +1494,7 @@ document.addEventListener('keydown',e=>{
   }
 })
 
-// TOOLTIPS
+// ── TOOLTIPS ──
 const tipEl=document.getElementById('tip')
 function bindTooltips(){
   document.querySelectorAll('[data-tip]').forEach(el=>{
@@ -1582,74 +1505,65 @@ function bindTooltips(){
   })
 }
 function showTip(el){
-  const txt=TIPS[el.getAttribute('data-tip')]
-  if(!txt)return
+  const txt=TIPS[el.getAttribute('data-tip')];if(!txt)return
   tipEl.textContent=txt
-  const r=el.getBoundingClientRect()
-  const tipW=260,tipH=90
-  let left=r.left+r.width/2-tipW/2
-  let top=r.top-tipH-8
+  const r=el.getBoundingClientRect(),tipW=260,tipH=90
+  let left=r.left+r.width/2-tipW/2,top=r.top-tipH-8
   if(left<8)left=8
   if(left+tipW>window.innerWidth-8)left=window.innerWidth-tipW-8
   if(top<8)top=r.bottom+8
-  tipEl.style.left=left+'px'
-  tipEl.style.top=top+'px'
+  tipEl.style.cssText=`left:${left}px;top:${top}px`
   tipEl.classList.add('on')
 }
 function hideTip(){tipEl.classList.remove('on')}
 
-// TOUR
+// ── TOUR ──
 const TOUR_DATA={
-  1:[{el:null,h:'Welcome to the prototype',p:'This is a 4-step interactive demo of Beam AI\'s Quick Review Workflow. Start by uploading a drawing — or click "Use sample drawing" for an instant demo.',btn:'Get started'}],
+  1:[{el:null,h:'Welcome to the prototype',p:'This is a 4-step interactive demo of Beam AI\'s Quick Review Workflow. Click "Use sample drawing" for an instant demo with pre-loaded annotation data.',btn:'Get started'}],
   2:[
-    {el:'q-prog-fill',h:'Risk-first ordering',p:'Annotations are sorted by risk level then dollar value — the costliest uncertain items surface first. High Risk items (61–74% confidence) always appear at the top.',btn:'Next →'},
-    {el:'tour-filters',h:'Filter tabs',p:'Use filters to focus on High Risk, Medium, or Flagged items. "Flagged" count updates as you work through the queue.',btn:'Next →'},
-    {el:'tour-kbhint',h:'Keyboard shortcuts',p:'Use ↑↓ to navigate the queue, Enter to open an item, and A/C/F to act on it directly — no mouse required for most reviews.',btn:'Start reviewing'},
+    {el:'q-prog-fill',h:'Risk-first ordering',p:'Items sorted by risk level then dollar value — the costliest uncertain items surface first.',btn:'Next →'},
+    {el:'items-grid',h:'Review queue',p:'Click any item to open its detail view. Use keyboard ↑↓ to navigate, Enter to open, A to accept directly from queue.',btn:'Next →'},
+    {el:'complete-btn',h:'Complete Review gate',p:'The "Complete Review" button is only enabled once all 5 HIGH risk items have been actioned. This is the exit gate.',btn:'Got it'},
   ],
   3:[
-    {el:'dv-flag',h:'Flag reasons',p:'Whenever the AI detects something uncertain — an overlap, a revision cloud, a size mismatch — the reason is surfaced here. This is the most important card in the view.',btn:'Next →'},
-    {el:'drawing-svg',h:'Drawing context',p:'The annotation is shown in context on the drawing. In production this renders the actual PDF page. Here it\'s illustrative.',btn:'Next →'},
-    {el:'tour-actions',h:'Action buttons',p:'Accept if it looks correct. Correct opens an edit panel. Flag opens a reason selector. Keyboard: A / C / F.',btn:'Start reviewing'},
+    {el:'dv-alert',h:'Risk alert',p:'For HIGH risk items, the AI surfaces a specific reason: double-count detection, obscured symbols, or quantity mismatches. Read this before acting.',btn:'Next →'},
+    {el:'action-row',h:'Action buttons',p:'Accept (correct as-is), Correct (edit qty/type), or Flag (route for review). Keyboard: A / C / F. Esc returns to queue.',btn:'Got it'},
   ],
-  4:[{el:'tour-export',h:'Export gate',p:'Once High Risk items are cleared and coverage exceeds 60%, export unlocks. Excel downloads a CSV. PDF opens a print-friendly view.',btn:'Done'}],
+  4:[{el:null,h:'Review complete',p:'The summary shows every item\'s status pulled from session state. CSV and PDF export generate real files from your session data.',btn:'Done'}],
 }
 
 function startTour(step){
-  const stops=TOUR_DATA[step]
-  if(!stops||tourShown[step])return
+  const stops=TOUR_DATA[step];if(!stops||tourShown[step])return
   tourShown[step]=true;tourActive=true;tourStops=stops;tourIdx=0
   document.getElementById('tour').classList.add('on')
   showTourStop(0)
 }
 function showTourStop(idx){
-  const stop=tourStops[idx]
-  if(!stop)return endTour()
+  const stop=tourStops[idx];if(!stop)return endTour()
   document.getElementById('tour-h').textContent=stop.h
   document.getElementById('tour-p').innerHTML=stop.p
   document.getElementById('tour-next-btn').textContent=stop.btn||'Next →'
   document.getElementById('tour-prog').textContent=`${idx+1} / ${tourStops.length}`
-  positionTourSpot(stop.el)
-  bindTooltips()
+  positionTourSpot(stop.el);bindTooltips()
 }
 function positionTourSpot(elId){
-  const spot=document.getElementById('tour-spot')
-  const tip=document.getElementById('tour-tip')
-  if(!elId){spot.style.cssText='width:0;height:0;top:50%;left:50%;';tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%);';return}
+  const spot=document.getElementById('tour-spot'),tip=document.getElementById('tour-tip')
+  if(!elId){spot.style.cssText='width:0;height:0;top:50%;left:50%';tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%)';return}
   const el=document.getElementById(elId)
-  if(!el){spot.style.cssText='width:0;height:0;top:50%;left:50%;';tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%)';return}
+  if(!el){spot.style.cssText='width:0;height:0;top:50%;left:50%';tip.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%)';return}
   const r=el.getBoundingClientRect(),pad=8
-  spot.style.cssText=`top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;`
-  const tipW=300,tipH=180
+  spot.style.cssText=`top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px`
+  const tipW=300,tipH=200
   let tipTop=r.bottom+pad+12,tipLeft=r.left
   if(tipTop+tipH>window.innerHeight-20)tipTop=r.top-tipH-12
   if(tipLeft+tipW>window.innerWidth-20)tipLeft=window.innerWidth-tipW-20
   if(tipLeft<12)tipLeft=12
-  tip.style.cssText=`top:${tipTop}px;left:${tipLeft}px;transform:none;`
+  tip.style.cssText=`top:${tipTop}px;left:${tipLeft}px;transform:none`
 }
 function tourNext(){tourIdx++;if(tourIdx>=tourStops.length)return endTour();showTourStop(tourIdx)}
 function endTour(){tourActive=false;document.getElementById('tour').classList.remove('on')}
 
-// TOAST
+// ── TOAST ──
 function showToast(msg,dur=3500){
   const t=document.getElementById('toast')
   document.getElementById('toast-msg').textContent=msg
@@ -1657,10 +1571,8 @@ function showToast(msg,dur=3500){
   setTimeout(()=>t.classList.remove('on'),dur)
 }
 
-// DRAG & DROP
+// ── INIT ──
 document.addEventListener('dragover',e=>e.preventDefault())
-
-// INIT
 bindTooltips()
 setupIntersection()
 showView('cs')
